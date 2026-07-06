@@ -163,11 +163,11 @@ h2 {
 }
 
 .marker.other {
-  background-image: url("/base-other.png");
+  background-image: url("./base-other.png");
 }
 
 .marker.own {
-  background-image: url("/base-own.png");
+  background-image: url("./base-own.png");
 }
 
 .marker.selected {
