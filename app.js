@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v12";
+const APP_VERSION = "v13";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 
 const config = window.GRIFFIN_SUPABASE || {};
@@ -26,6 +26,7 @@ const supabaseClient = window.supabase?.createClient(config.url, config.anonKey)
 
 const map = document.querySelector("#map");
 const tileLayer = document.querySelector("#tileLayer");
+const gridLayer = document.querySelector("#gridLayer");
 const markerLayer = document.querySelector("#markerLayer");
 const playerNameInput = document.querySelector("#playerName");
 const seitchNameInput = document.querySelector("#seitchName");
@@ -34,6 +35,8 @@ const deepTypeField = document.querySelector("#deepTypeField");
 const deepMarkerTypeInput = document.querySelector("#deepMarkerType");
 const deepZoneField = document.querySelector("#deepZoneField");
 const deepPvpZoneInput = document.querySelector("#deepPvpZone");
+const deepGuildField = document.querySelector("#deepGuildField");
+const deepGuildBaseInput = document.querySelector("#deepGuildBase");
 const markerTypeField = document.querySelector("#markerTypeField");
 const markerTypeInput = document.querySelector("#markerType");
 const placeButton = document.querySelector("#placeButton");
@@ -173,9 +176,50 @@ function renderTiles() {
 }
 
 function markerIconClass(marker) {
-  if (marker.targetType === "enemy") return "enemy";
+  if (marker.targetType === "enemy" || marker.iconType === "enemy") return "enemy";
   if (marker.iconType === "guild") return "guild";
   return marker.iconType === "other" ? "other" : marker.ownerId === currentUserId || marker.claimedByMe ? "own" : "other";
+}
+
+function renderGrid() {
+  gridLayer.replaceChildren();
+  gridLayer.classList.toggle("hidden", !isDeepMap());
+  if (!isDeepMap()) return;
+
+  const size = worldSize();
+  gridLayer.style.left = `${view.offsetX}px`;
+  gridLayer.style.top = `${view.offsetY}px`;
+  gridLayer.style.width = `${size}px`;
+  gridLayer.style.height = `${size}px`;
+
+  const letters = "ABCDEFGHI".split("");
+  const numbers = Array.from({ length: 9 }, (_, index) => String(index + 1));
+
+  for (let index = 1; index < 9; index += 1) {
+    const vertical = document.createElement("span");
+    vertical.className = "grid-line vertical";
+    vertical.style.left = `${(index / 9) * 100}%`;
+
+    const horizontal = document.createElement("span");
+    horizontal.className = "grid-line horizontal";
+    horizontal.style.top = `${(index / 9) * 100}%`;
+
+    gridLayer.append(vertical, horizontal);
+  }
+
+  for (let index = 0; index < 9; index += 1) {
+    const letter = document.createElement("span");
+    letter.className = "grid-label column";
+    letter.textContent = letters[index];
+    letter.style.left = `${((index + 0.5) / 9) * 100}%`;
+
+    const number = document.createElement("span");
+    number.className = "grid-label row";
+    number.textContent = numbers[index];
+    number.style.top = `${((index + 0.5) / 9) * 100}%`;
+
+    gridLayer.append(letter, number);
+  }
 }
 
 function renderMarkers() {
@@ -283,7 +327,7 @@ function renderList() {
     const helper = document.createElement("small");
     helper.textContent = [
       marker.claimedByMe ? "Claimed by you." : "",
-      canEdit ? "You can move or edit this marker." : "Placed by another member.",
+      canEdit ? marker.targetType === "enemy" ? "You can move this marker." : "You can move or edit this marker." : "Placed by another member.",
     ].filter(Boolean).join(" ");
     details.appendChild(helper);
 
@@ -304,13 +348,16 @@ function renderList() {
       move.textContent = "Move";
       move.addEventListener("click", () => startMoving(marker));
 
-      const edit = document.createElement("button");
-      edit.type = "button";
-      edit.className = "secondary";
-      edit.textContent = "Edit";
-      edit.addEventListener("click", () => editMarkerDetails(marker));
+      actions.appendChild(move);
 
-      actions.append(move, edit);
+      if (marker.targetType !== "enemy") {
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "secondary";
+        edit.textContent = "Edit";
+        edit.addEventListener("click", () => editMarkerDetails(marker));
+        actions.appendChild(edit);
+      }
     }
 
     if (canClaim) {
@@ -328,10 +375,15 @@ function renderList() {
 }
 
 function renderControls() {
+  const enemyMode = isDeepMap() && deepMarkerTypeInput.value === "enemy";
+  const deepBaseMode = isDeepMap() && deepMarkerTypeInput.value === "base";
+  playerNameInput.closest(".field").classList.toggle("hidden", enemyMode);
   seitchField.classList.toggle("hidden", isDeepMap());
   deepTypeField.classList.toggle("hidden", !isDeepMap());
-  deepZoneField.classList.toggle("hidden", !isDeepMap());
-  markerTypeField.classList.toggle("hidden", !isAdmin);
+  deepZoneField.classList.toggle("hidden", !deepBaseMode);
+  deepGuildField.classList.toggle("hidden", !deepBaseMode);
+  markerTypeField.classList.toggle("hidden", !isAdmin || enemyMode);
+  baseLimitHint.classList.toggle("hidden", enemyMode);
   mapTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mapId === activeMapId));
   map.setAttribute("aria-label", `${activeMap().title} map`);
 }
@@ -340,6 +392,7 @@ function render() {
   clampView();
   renderControls();
   renderTiles();
+  renderGrid();
   renderMarkers();
   renderList();
 }
@@ -362,10 +415,15 @@ function seitchName() {
 }
 
 function ownedBaseCount() {
-  return markers.filter((marker) => marker.mapId === activeMapId && marker.ownerId === currentUserId).length;
+  return markers.filter((marker) => marker.mapId === activeMapId && marker.ownerId === currentUserId && marker.targetType === "base").length;
 }
 
 function updateBaseLimitHint() {
+  if (isDeepMap() && deepMarkerTypeInput.value === "enemy") {
+    placeButton.disabled = false;
+    return;
+  }
+
   if (isAdmin) {
     baseLimitHint.textContent = "Admin placement is unlimited.";
     placeButton.disabled = false;
@@ -373,7 +431,7 @@ function updateBaseLimitHint() {
   }
 
   const used = ownedBaseCount();
-  baseLimitHint.textContent = `Your ${activeMap().title} markers: ${used}/${MEMBER_BASE_LIMIT}`;
+  baseLimitHint.textContent = `Your ${activeMap().title} bases: ${used}/${MEMBER_BASE_LIMIT}`;
   placeButton.disabled = used >= MEMBER_BASE_LIMIT && !movingMarkerId;
 }
 
@@ -398,15 +456,18 @@ function normalizeMarker(row) {
 }
 
 function markerPayload(point, marker) {
-  const name = playerName();
   const targetType = isDeepMap() ? deepMarkerTypeInput.value : "base";
+  const nextIconType = marker?.iconType
+    || (isDeepMap() && targetType === "base" && deepGuildBaseInput.checked ? "guild" : null)
+    || (isAdmin ? markerTypeInput.value : "auto");
+
   return {
-    player_name: marker?.playerName || name,
+    player_name: marker?.playerName || (targetType === "enemy" ? "Enemy" : playerName()),
     seitch_name: isDeepMap() ? "" : marker?.seitchName || seitchName(),
     map_id: marker?.mapId || activeMapId,
     target_type: marker?.targetType || targetType,
     zone_type: marker?.zoneType || (isDeepMap() ? (deepPvpZoneInput.checked ? "pvp" : "pve") : "pve"),
-    icon_type: isAdmin ? markerTypeInput.value : "auto",
+    icon_type: marker?.targetType === "enemy" || targetType === "enemy" ? "enemy" : nextIconType,
     x: point.x,
     y: point.y,
   };
@@ -431,15 +492,18 @@ function removeMarker(markerId) {
 }
 
 async function saveMarker(point, marker = null) {
-  const name = playerName();
+  const targetType = isDeepMap() ? deepMarkerTypeInput.value : "base";
+  const name = targetType === "enemy" ? "Enemy" : playerName();
   if (!name) {
     playerNameInput.focus();
     modeHint.textContent = "Enter your name first, then place the marker.";
     return;
   }
 
-  localStorage.setItem("griffinWingPlayerName", name);
-  localStorage.setItem("griffinWingSeitchName", seitchName());
+  if (targetType !== "enemy") {
+    localStorage.setItem("griffinWingPlayerName", name);
+    localStorage.setItem("griffinWingSeitchName", seitchName());
+  }
 
   let query;
   if (marker) {
@@ -450,12 +514,11 @@ async function saveMarker(point, marker = null) {
       .select()
       .single();
   } else {
-    const targetType = isDeepMap() ? deepMarkerTypeInput.value : "base";
     query = supabaseClient
       .from("base_markers")
       .insert({
         owner_id: currentUserId,
-        label: targetType === "enemy" ? `Enemy Base - ${name}` : `${name}'s Base`,
+        label: targetType === "enemy" ? "Enemy Base" : `${name}'s Base`,
         type: targetType,
         ...markerPayload(point),
       })
@@ -576,7 +639,7 @@ async function toggleClaim(marker) {
 }
 
 function startPlacing() {
-  if (!isAdmin && ownedBaseCount() >= MEMBER_BASE_LIMIT) {
+  if (!isAdmin && !(isDeepMap() && deepMarkerTypeInput.value === "enemy") && ownedBaseCount() >= MEMBER_BASE_LIMIT) {
     modeHint.textContent = `Members can place up to ${MEMBER_BASE_LIMIT} markers on this map. Delete one first to place another.`;
     updateBaseLimitHint();
     return;
@@ -656,6 +719,21 @@ placeButton.textContent = "Place marker";
 placeButton.addEventListener("click", startPlacing);
 cancelButton.addEventListener("click", cancelPlacement);
 editCancelButton.addEventListener("click", () => editDialog.close());
+deepMarkerTypeInput.addEventListener("change", () => {
+  if (deepMarkerTypeInput.value === "enemy") {
+    deepGuildBaseInput.checked = false;
+    if (isAdmin) markerTypeInput.value = "enemy";
+  } else if (isAdmin && markerTypeInput.value === "enemy") {
+    markerTypeInput.value = deepGuildBaseInput.checked ? "guild" : "own";
+  }
+  render();
+});
+deepGuildBaseInput.addEventListener("change", () => {
+  if (isAdmin && deepMarkerTypeInput.value === "base") {
+    markerTypeInput.value = deepGuildBaseInput.checked ? "guild" : "own";
+  }
+  render();
+});
 mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
 
 editForm.addEventListener("submit", async (event) => {

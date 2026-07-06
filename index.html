@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Griffin Wing Base Map</title>
-    <link rel="stylesheet" href="./styles.css?v=12">
+    <link rel="stylesheet" href="./styles.css?v=13">
   </head>
   <body>
     <main class="app-shell">
@@ -26,10 +26,19 @@
             <button id="deepTab" class="map-tab" type="button" data-map-id="deep">Deep Desert</button>
           </div>
           <div id="tileLayer" class="tile-layer"></div>
+          <div id="gridLayer" class="grid-layer hidden" aria-hidden="true"></div>
           <div id="markerLayer" class="marker-layer"></div>
         </div>
 
         <aside class="side-panel" aria-label="Base marker details">
+          <label id="deepTypeField" class="field hidden">
+            <span>Location type</span>
+            <select id="deepMarkerType">
+              <option value="base">My Base</option>
+              <option value="enemy">Enemy Base</option>
+            </select>
+          </label>
+
           <label class="field">
             <span>Character Name</span>
             <input id="playerName" type="text" maxlength="40" autocomplete="nickname" placeholder="Example: LuckyBananas">
@@ -40,17 +49,14 @@
             <input id="seitchName" type="text" maxlength="40" autocomplete="organization" placeholder="Example: Seitch Ramal">
           </label>
 
-          <label id="deepTypeField" class="field hidden">
-            <span>Location type</span>
-            <select id="deepMarkerType">
-              <option value="enemy">Enemy base</option>
-              <option value="base">Guild/member base</option>
-            </select>
-          </label>
-
           <label id="deepZoneField" class="checkbox-field hidden">
             <input id="deepPvpZone" type="checkbox">
             <span>PvP area</span>
+          </label>
+
+          <label id="deepGuildField" class="checkbox-field hidden">
+            <input id="deepGuildBase" type="checkbox">
+            <span>Guild Base</span>
           </label>
 
           <label id="markerTypeField" class="field hidden">
@@ -59,6 +65,7 @@
               <option value="own">Image 2 - my base</option>
               <option value="other">Image 1 - other member</option>
               <option value="guild">Guild access base</option>
+              <option value="enemy">Enemy red X</option>
             </select>
           </label>
 
@@ -106,6 +113,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=4"></script>
-    <script src="./app.js?v=12"></script>
+    <script src="./app.js?v=13"></script>
   </body>
 </html>
