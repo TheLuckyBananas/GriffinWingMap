@@ -507,6 +507,10 @@ map.addEventListener("pointerup", (event) => {
 map.addEventListener("click", (event) => {
   if (!placing) return;
   const marker = markers.find((item) => item.id === movingMarkerId);
+  if (marker) {
+    selectedMarkerId = null;
+    render();
+  }
   saveMarker(mapPointFromEvent(event), marker);
 });
 
