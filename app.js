@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v17";
+const APP_VERSION = "v18";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 
 const config = window.GRIFFIN_SUPABASE || {};
@@ -71,7 +71,7 @@ let dragStart = null;
 let isAdmin = false;
 let currentUserId = null;
 let editingMarkerId = null;
-let activeMapId = "hagga";
+let activeMapId = initialMapIdFromUrl();
 let deepDesertSignature = MAPS.deep.tileUrl;
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
@@ -87,6 +87,29 @@ const view = {
 
 function activeMap() {
   return MAPS[activeMapId];
+}
+
+function initialMapIdFromUrl() {
+  const params = new URLSearchParams(location.search);
+  const rawValue = params.get("map") || location.hash.slice(1) || "";
+  const value = rawValue.toLowerCase().replace(/[^a-z]/g, "");
+
+  if (["deep", "dd", "deepdesert", "thedeepdesert"].includes(value)) return "deep";
+  if (["hagga", "haggabasin"].includes(value)) return "hagga";
+  return "hagga";
+}
+
+function updateMapUrl(mapId) {
+  const url = new URL(location.href);
+  url.hash = "";
+
+  if (mapId === "deep") {
+    url.searchParams.set("map", "deep");
+  } else {
+    url.searchParams.delete("map");
+  }
+
+  history.replaceState(null, "", url);
 }
 
 function isDeepMap() {
@@ -800,6 +823,7 @@ function zoomFromSlider() {
 async function switchMap(nextMapId) {
   if (!MAPS[nextMapId] || activeMapId === nextMapId) return;
   activeMapId = nextMapId;
+  updateMapUrl(nextMapId);
   placing = false;
   movingMarkerId = null;
   selectedMarkerId = null;
