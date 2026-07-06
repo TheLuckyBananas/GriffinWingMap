@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v13";
+const APP_VERSION = "v14";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 
 const config = window.GRIFFIN_SUPABASE || {};
@@ -192,9 +192,6 @@ function renderGrid() {
   gridLayer.style.width = `${size}px`;
   gridLayer.style.height = `${size}px`;
 
-  const letters = "ABCDEFGHI".split("");
-  const numbers = Array.from({ length: 9 }, (_, index) => String(index + 1));
-
   for (let index = 1; index < 9; index += 1) {
     const vertical = document.createElement("span");
     vertical.className = "grid-line vertical";
@@ -207,19 +204,27 @@ function renderGrid() {
     gridLayer.append(vertical, horizontal);
   }
 
-  for (let index = 0; index < 9; index += 1) {
-    const letter = document.createElement("span");
-    letter.className = "grid-label column";
-    letter.textContent = letters[index];
-    letter.style.left = `${((index + 0.5) / 9) * 100}%`;
-
-    const number = document.createElement("span");
-    number.className = "grid-label row";
-    number.textContent = numbers[index];
-    number.style.top = `${((index + 0.5) / 9) * 100}%`;
-
-    gridLayer.append(letter, number);
+  for (let row = 0; row < 9; row += 1) {
+    for (let column = 0; column < 9; column += 1) {
+      const label = document.createElement("span");
+      label.className = "grid-label sector";
+      label.textContent = sectorName(column, row);
+      label.style.left = `${((column + 0.5) / 9) * 100}%`;
+      label.style.top = `${((row + 0.5) / 9) * 100}%`;
+      gridLayer.appendChild(label);
+    }
   }
+}
+
+function sectorNameFromPoint(x, y) {
+  const column = Math.max(0, Math.min(8, Math.floor(x * 9)));
+  const row = Math.max(0, Math.min(8, Math.floor(y * 9)));
+  return sectorName(column, row);
+}
+
+function sectorName(column, row) {
+  const lettersBottomToTop = "ABCDEFGHI";
+  return `${lettersBottomToTop[8 - row]}${column + 1}`;
 }
 
 function renderMarkers() {
@@ -257,7 +262,7 @@ function renderMarkers() {
     label.appendChild(labelName);
 
     const secondary = marker.mapId === "deep"
-      ? `${marker.zoneType.toUpperCase()} ${marker.targetType === "enemy" ? "Enemy Base" : "Base"}`
+      ? marker.targetType === "enemy" ? sectorNameFromPoint(marker.x, marker.y) : `${marker.zoneType.toUpperCase()} Base`
       : marker.seitchName;
 
     if (secondary) {
@@ -278,7 +283,9 @@ function currentMapMarkers() {
 function renderList() {
   updateBaseLimitHint();
   const visibleMarkers = currentMapMarkers();
-  baseCount.textContent = String(visibleMarkers.length);
+  const friendlyMarkers = visibleMarkers.filter((marker) => marker.targetType !== "enemy");
+  const enemyMarkers = visibleMarkers.filter((marker) => marker.targetType === "enemy");
+  baseCount.textContent = isDeepMap() ? `${friendlyMarkers.length}/${enemyMarkers.length}` : String(visibleMarkers.length);
   baseList.replaceChildren();
 
   if (!visibleMarkers.length) {
@@ -289,10 +296,42 @@ function renderList() {
     return;
   }
 
-  for (const marker of [...visibleMarkers].sort((a, b) => a.label.localeCompare(b.label))) {
+  if (isDeepMap()) {
+    renderMarkerSection("Friendly Bases", friendlyMarkers);
+    renderMarkerSection("Enemy Bases", enemyMarkers);
+    return;
+  }
+
+  renderMarkerSection(null, visibleMarkers);
+}
+
+function renderMarkerSection(title, sectionMarkers) {
+  if (title) {
+    const sectionHeader = document.createElement("div");
+    sectionHeader.className = "base-section-header";
+
+    const sectionTitle = document.createElement("strong");
+    sectionTitle.textContent = title;
+
+    const sectionCount = document.createElement("span");
+    sectionCount.textContent = String(sectionMarkers.length);
+
+    sectionHeader.append(sectionTitle, sectionCount);
+    baseList.appendChild(sectionHeader);
+  }
+
+  if (!sectionMarkers.length) {
+    const empty = document.createElement("p");
+    empty.className = "empty compact";
+    empty.textContent = title ? `No ${title.toLowerCase()} placed yet.` : activeMap().emptyText;
+    baseList.appendChild(empty);
+    return;
+  }
+
+  for (const marker of [...sectionMarkers].sort((a, b) => a.label.localeCompare(b.label))) {
     const isOwner = marker.ownerId === currentUserId;
     const canEdit = isAdmin || isOwner || marker.claimedByMe;
-    const canDelete = isAdmin || isOwner;
+    const canDelete = isAdmin || isOwner || marker.targetType === "enemy";
     const canClaim = !isOwner && !isAdmin && marker.targetType !== "enemy";
     const item = document.createElement("article");
     item.className = "base-item";
@@ -316,7 +355,7 @@ function renderList() {
 
     if (marker.mapId === "deep") {
       const locationType = document.createElement("small");
-      locationType.textContent = `${marker.targetType === "enemy" ? "Enemy base" : "Base"} - ${marker.zoneType.toUpperCase()}`;
+      locationType.textContent = marker.targetType === "enemy" ? `Sector: ${sectorNameFromPoint(marker.x, marker.y)}` : `Base - ${marker.zoneType.toUpperCase()}`;
       details.appendChild(locationType);
     } else if (marker.seitchName) {
       const seitch = document.createElement("small");
@@ -327,7 +366,7 @@ function renderList() {
     const helper = document.createElement("small");
     helper.textContent = [
       marker.claimedByMe ? "Claimed by you." : "",
-      canEdit ? marker.targetType === "enemy" ? "You can move this marker." : "You can move or edit this marker." : "Placed by another member.",
+      canEdit ? marker.targetType === "enemy" ? "Enemy marker can be removed by anyone." : "You can move or edit this marker." : "Placed by another member.",
     ].filter(Boolean).join(" ");
     details.appendChild(helper);
 
@@ -419,7 +458,8 @@ function ownedBaseCount() {
 }
 
 function updateBaseLimitHint() {
-  if (isDeepMap() && deepMarkerTypeInput.value === "enemy") {
+  if (isDeepMap()) {
+    baseLimitHint.textContent = "Deep Desert placement is unlimited.";
     placeButton.disabled = false;
     return;
   }
@@ -639,8 +679,8 @@ async function toggleClaim(marker) {
 }
 
 function startPlacing() {
-  if (!isAdmin && !(isDeepMap() && deepMarkerTypeInput.value === "enemy") && ownedBaseCount() >= MEMBER_BASE_LIMIT) {
-    modeHint.textContent = `Members can place up to ${MEMBER_BASE_LIMIT} markers on this map. Delete one first to place another.`;
+  if (!isAdmin && !isDeepMap() && ownedBaseCount() >= MEMBER_BASE_LIMIT) {
+    modeHint.textContent = `Members can place up to ${MEMBER_BASE_LIMIT} bases on this map. Delete one first to place another.`;
     updateBaseLimitHint();
     return;
   }

@@ -179,25 +179,17 @@ h2 {
   position: absolute;
   display: grid;
   place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 1px solid rgba(245, 239, 228, 0.24);
-  border-radius: 999px;
-  background: rgba(5, 5, 5, 0.72);
-  color: rgba(245, 239, 228, 0.9);
-  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.7rem;
   font-weight: 800;
+  letter-spacing: 0.02em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+  transform: translate(-50%, -50%);
 }
 
-.grid-label.column {
-  top: 8px;
-  transform: translateX(-50%);
-}
-
-.grid-label.row {
-  left: 8px;
-  transform: translateY(-50%);
+.grid-label.sector {
+  width: 32px;
+  height: 20px;
 }
 
 .tile {
@@ -464,6 +456,27 @@ button.danger {
 .base-item-details {
   display: grid;
   gap: 3px;
+}
+
+.base-section-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 8px;
+  padding: 5px 2px 2px;
+  color: var(--gold);
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.base-section-header:first-child {
+  margin-top: 0;
+}
+
+.empty.compact {
+  margin: 0 0 4px;
+  font-size: 0.84rem;
 }
 
 .base-item-actions {
