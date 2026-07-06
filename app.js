@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v15";
+const APP_VERSION = "v16";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 
 const config = window.GRIFFIN_SUPABASE || {};
@@ -338,6 +338,7 @@ function renderMarkerSection(title, sectionMarkers) {
     const canEdit = isAdmin || isOwner || marker.claimedByMe;
     const canDelete = isAdmin || isOwner || marker.targetType === "enemy";
     const canClaim = !isOwner && !isAdmin && marker.targetType !== "enemy";
+    const canReleaseOwnership = isAdmin && isOwner && marker.targetType !== "enemy";
     const item = document.createElement("article");
     item.className = "base-item";
 
@@ -402,6 +403,16 @@ function renderMarkerSection(title, sectionMarkers) {
         edit.addEventListener("click", () => editMarkerDetails(marker));
         actions.appendChild(edit);
       }
+    }
+
+    if (canReleaseOwnership) {
+      const release = document.createElement("button");
+      release.type = "button";
+      release.className = "secondary";
+      release.textContent = "Release";
+      release.title = "Make this an unclaimed imported base";
+      release.addEventListener("click", () => releaseMarkerOwnership(marker));
+      actions.appendChild(release);
     }
 
     if (canClaim) {
@@ -682,6 +693,24 @@ async function toggleClaim(marker) {
     modeHint.textContent = "Marker claimed. It will now use your base icon.";
   }
 
+  render();
+}
+
+async function releaseMarkerOwnership(marker) {
+  const { data, error } = await supabaseClient
+    .from("base_markers")
+    .update({ owner_id: null, icon_type: marker.iconType === "guild" ? "guild" : "auto" })
+    .eq("id", marker.id)
+    .select()
+    .single();
+
+  if (error) {
+    modeHint.textContent = error.message || "Could not release marker ownership.";
+    return;
+  }
+
+  upsertMarker(normalizeMarker(data));
+  modeHint.textContent = "Marker released. It will now appear as another member's base until someone claims it.";
   render();
 }
 
