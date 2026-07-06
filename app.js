@@ -210,12 +210,21 @@ function renderList() {
     const title = document.createElement("strong");
     title.textContent = marker.label;
 
-    const details = document.createElement("small");
-    details.textContent = [
-      marker.seitchName ? `Seitch: ${marker.seitchName}` : "",
+    const details = document.createElement("div");
+    details.className = "base-item-details";
+
+    if (marker.seitchName) {
+      const seitch = document.createElement("small");
+      seitch.textContent = `Seitch: ${marker.seitchName}`;
+      details.appendChild(seitch);
+    }
+
+    const helper = document.createElement("small");
+    helper.textContent = [
       marker.claimedByMe ? "Claimed by you." : "",
       canEdit ? "You can move or edit this marker." : "Placed by another member.",
     ].filter(Boolean).join(" ");
+    details.appendChild(helper);
 
     const actions = document.createElement("div");
     actions.className = "base-item-actions";

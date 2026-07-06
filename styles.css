@@ -370,6 +370,11 @@ button.danger {
   color: var(--muted);
 }
 
+.base-item-details {
+  display: grid;
+  gap: 3px;
+}
+
 .base-item-actions {
   display: flex;
   gap: 8px;
