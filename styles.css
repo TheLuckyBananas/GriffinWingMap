@@ -311,6 +311,7 @@ button.danger {
 }
 
 .base-item {
+  position: relative;
   display: grid;
   gap: 8px;
   padding: 10px;
@@ -320,6 +321,7 @@ button.danger {
 }
 
 .base-item strong {
+  padding-right: 36px;
   font-size: 0.94rem;
 }
 
@@ -336,6 +338,44 @@ button.danger {
   flex: 1;
   padding: 8px 9px;
   font-size: 0.84rem;
+}
+
+.delete-chip {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  overflow: hidden;
+  padding: 0 8px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  line-height: 1;
+  transition: width 140ms ease, min-width 140ms ease;
+}
+
+.delete-chip span:last-child {
+  max-width: 0;
+  opacity: 0;
+  overflow: hidden;
+  transition: max-width 140ms ease, opacity 120ms ease;
+}
+
+.delete-chip:hover,
+.delete-chip:focus-visible {
+  width: 72px;
+  min-width: 72px;
+}
+
+.delete-chip:hover span:last-child,
+.delete-chip:focus-visible span:last-child {
+  max-width: 44px;
+  opacity: 1;
 }
 
 .empty {

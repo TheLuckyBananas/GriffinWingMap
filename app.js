@@ -117,7 +117,7 @@ function renderTiles() {
 }
 
 function markerIconClass(marker) {
-  return marker.iconType === "other" ? "other" : marker.ownerId === currentUserId ? "own" : "other";
+  return marker.iconType === "other" ? "other" : marker.ownerId === currentUserId || marker.claimedByMe ? "own" : "other";
 }
 
 function renderMarkers() {
@@ -180,9 +180,23 @@ function renderList() {
   }
 
   for (const marker of [...markers].sort((a, b) => a.label.localeCompare(b.label))) {
-    const canEdit = isAdmin || marker.ownerId === currentUserId;
+    const isOwner = marker.ownerId === currentUserId;
+    const canEdit = isAdmin || isOwner || marker.claimedByMe;
+    const canDelete = isAdmin || isOwner;
+    const canClaim = !isOwner && !isAdmin;
     const item = document.createElement("article");
     item.className = "base-item";
+
+    if (canDelete) {
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "danger delete-chip";
+      remove.title = "Delete";
+      remove.setAttribute("aria-label", `Delete ${marker.label}`);
+      remove.innerHTML = "<span>X</span><span>Delete</span>";
+      remove.addEventListener("click", () => deleteMarker(marker));
+      item.appendChild(remove);
+    }
 
     const title = document.createElement("strong");
     title.textContent = marker.label;
@@ -190,7 +204,8 @@ function renderList() {
     const details = document.createElement("small");
     details.textContent = [
       marker.seitchName ? `Seitch: ${marker.seitchName}` : "",
-      canEdit ? "You can move or delete this marker." : "Placed by another member.",
+      marker.claimedByMe ? "Claimed by you." : "",
+      canEdit ? "You can move or edit this marker." : "Placed by another member.",
     ].filter(Boolean).join(" ");
 
     const actions = document.createElement("div");
@@ -216,12 +231,16 @@ function renderList() {
       edit.textContent = "Edit";
       edit.addEventListener("click", () => editMarkerDetails(marker));
 
-      const remove = document.createElement("button");
-      remove.type = "button";
-      remove.className = "danger";
-      remove.textContent = "Delete";
-      remove.addEventListener("click", () => deleteMarker(marker));
-      actions.append(move, edit, remove);
+      actions.append(move, edit);
+    }
+
+    if (canClaim) {
+      const claim = document.createElement("button");
+      claim.type = "button";
+      claim.className = marker.claimedByMe ? "secondary" : "";
+      claim.textContent = marker.claimedByMe ? "Unclaim" : "Claim";
+      claim.addEventListener("click", () => toggleClaim(marker));
+      actions.appendChild(claim);
     }
 
     item.append(title, details, actions);
@@ -280,6 +299,7 @@ function normalizeMarker(row) {
     y: row.y,
     type: row.type,
     iconType: row.icon_type,
+    claimedByMe: Boolean(row.claimedByMe),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -299,10 +319,14 @@ function markerPayload(point, marker) {
 function upsertMarker(marker) {
   const existingIndex = markers.findIndex((item) => item.id === marker.id);
   if (existingIndex >= 0) {
-    markers = markers.map((item) => (item.id === marker.id ? marker : item));
+    markers = markers.map((item) => (item.id === marker.id ? { ...marker, claimedByMe: item.claimedByMe } : item));
   } else {
     markers = [...markers, marker];
   }
+}
+
+function setMarkerClaim(markerId, claimedByMe) {
+  markers = markers.map((marker) => marker.id === markerId ? { ...marker, claimedByMe } : marker);
 }
 
 function removeMarker(markerId) {
@@ -406,6 +430,38 @@ async function editMarkerDetails(marker) {
 
   upsertMarker(normalizeMarker(data));
   modeHint.textContent = "Base details updated. Connected guild members will see it automatically.";
+  render();
+}
+
+async function toggleClaim(marker) {
+  if (marker.claimedByMe) {
+    const { error } = await supabaseClient
+      .from("base_marker_claims")
+      .delete()
+      .eq("marker_id", marker.id)
+      .eq("user_id", currentUserId);
+
+    if (error) {
+      modeHint.textContent = error.message || "Could not unclaim base.";
+      return;
+    }
+
+    setMarkerClaim(marker.id, false);
+    modeHint.textContent = "Base unclaimed. It will now appear as another member's base.";
+  } else {
+    const { error } = await supabaseClient
+      .from("base_marker_claims")
+      .insert({ marker_id: marker.id, user_id: currentUserId });
+
+    if (error) {
+      modeHint.textContent = error.message || "Could not claim base.";
+      return;
+    }
+
+    setMarkerClaim(marker.id, true);
+    modeHint.textContent = "Base claimed. It will now use your base icon.";
+  }
+
   render();
 }
 
@@ -548,17 +604,36 @@ async function loadMarkers() {
 
   if (error) throw error;
   markers = data.map(normalizeMarker);
+
+  const { data: claims, error: claimsError } = await supabaseClient
+    .from("base_marker_claims")
+    .select("marker_id")
+    .eq("user_id", currentUserId);
+
+  if (claimsError) throw claimsError;
+  const claimedMarkerIds = new Set(claims.map((claim) => claim.marker_id));
+  markers = markers.map((marker) => ({ ...marker, claimedByMe: claimedMarkerIds.has(marker.id) }));
   render();
 }
 
 function connectEvents() {
   supabaseClient
-    .channel("base_markers_live")
+    .channel("base_map_live")
     .on("postgres_changes", { event: "*", schema: "public", table: "base_markers" }, (payload) => {
       if (payload.eventType === "DELETE") {
         removeMarker(payload.old.id);
       } else {
         upsertMarker(normalizeMarker(payload.new));
+      }
+      syncStatus.textContent = "Live";
+      render();
+    })
+    .on("postgres_changes", { event: "*", schema: "public", table: "base_marker_claims" }, (payload) => {
+      if (payload.eventType === "INSERT" && payload.new.user_id === currentUserId) {
+        setMarkerClaim(payload.new.marker_id, true);
+      }
+      if (payload.eventType === "DELETE" && payload.old.user_id === currentUserId) {
+        setMarkerClaim(payload.old.marker_id, false);
       }
       syncStatus.textContent = "Live";
       render();
