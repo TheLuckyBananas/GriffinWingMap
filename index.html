@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Griffin Wing Base Map</title>
+    <link rel="stylesheet" href="./styles.css">
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="toolbar" aria-label="Map controls">
+        <div>
+          <p class="eyebrow">Dune: Awakening</p>
+          <h1>Griffin Wing Base Map</h1>
+        </div>
+        <div class="status-group">
+          <span id="adminBadge" class="badge hidden">Host admin</span>
+          <span id="syncStatus" class="badge">HTML v3</span>
+        </div>
+      </section>
+
+      <section class="map-panel">
+        <div id="map" class="map" aria-label="Hagga Basin map">
+          <div id="tileLayer" class="tile-layer"></div>
+          <div id="markerLayer" class="marker-layer"></div>
+        </div>
+
+        <aside class="side-panel" aria-label="Base marker details">
+          <label class="field">
+            <span>Character Name</span>
+            <input id="playerName" type="text" maxlength="40" autocomplete="nickname" placeholder="Example: LuckyBananas">
+          </label>
+
+          <label class="field">
+            <span>Seitch Name</span>
+            <input id="seitchName" type="text" maxlength="40" autocomplete="organization" placeholder="Example: Seitch Ramal">
+          </label>
+
+          <label id="markerTypeField" class="field hidden">
+            <span>Marker image</span>
+            <select id="markerType">
+              <option value="own">Image 2 - my base</option>
+              <option value="other">Image 1 - other member</option>
+            </select>
+          </label>
+
+          <div class="actions">
+            <button id="placeButton" type="button">Place my base</button>
+            <button id="cancelButton" class="secondary hidden" type="button">Cancel</button>
+          </div>
+
+          <p id="modeHint" class="hint">Pan and zoom the map. Choose Place my base, then click your base location.</p>
+          <p id="baseLimitHint" class="hint"></p>
+          <p id="userIdHint" class="hint hidden"></p>
+
+          <div class="divider"></div>
+
+          <div class="list-header">
+            <h2>Bases</h2>
+            <span id="baseCount">0</span>
+          </div>
+          <div id="baseList" class="base-list"></div>
+        </aside>
+      </section>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="./supabase-config.js?v=4"></script>
+    <script src="./app.js?v=4"></script>
+  </body>
+</html>
