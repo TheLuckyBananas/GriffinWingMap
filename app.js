@@ -348,8 +348,10 @@ async function saveMarker(point, marker = null) {
     return;
   }
 
+  const wasMoving = Boolean(marker);
   placing = false;
   movingMarkerId = null;
+  if (wasMoving) selectedMarkerId = null;
   upsertMarker(normalizeMarker(data));
   map.classList.remove("placing");
   placeButton.textContent = "Place my base";
