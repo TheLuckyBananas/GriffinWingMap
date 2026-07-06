@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v14";
+const APP_VERSION = "v15";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 
 const config = window.GRIFFIN_SUPABASE || {};
@@ -28,6 +28,8 @@ const map = document.querySelector("#map");
 const tileLayer = document.querySelector("#tileLayer");
 const gridLayer = document.querySelector("#gridLayer");
 const markerLayer = document.querySelector("#markerLayer");
+const pageTitle = document.querySelector("#pageTitle");
+const zoomSlider = document.querySelector("#zoomSlider");
 const playerNameInput = document.querySelector("#playerName");
 const seitchNameInput = document.querySelector("#seitchName");
 const seitchField = document.querySelector("#seitchField");
@@ -69,6 +71,7 @@ let isAdmin = false;
 let currentUserId = null;
 let editingMarkerId = null;
 let activeMapId = "hagga";
+let deepDesertSignature = MAPS.deep.tileUrl;
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
 if (savedName) playerNameInput.value = savedName;
@@ -138,6 +141,8 @@ async function refreshMapTileUrls() {
       MAPS[mapId].tileUrl = `https://cdn.th.gl/dune-awakening${tile.url}?v=1`;
     }
   }
+
+  deepDesertSignature = MAPS.deep.tileUrl;
 }
 
 function renderTiles() {
@@ -425,6 +430,8 @@ function renderControls() {
   baseLimitHint.classList.toggle("hidden", enemyMode);
   mapTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mapId === activeMapId));
   map.setAttribute("aria-label", `${activeMap().title} map`);
+  pageTitle.textContent = isDeepMap() ? "DD Bases and Enemy Locations" : "Griffin Wing Base Map";
+  zoomSlider.value = String(view.zoom);
 }
 
 function render() {
@@ -740,6 +747,11 @@ function changeZoom(delta, clientX, clientY) {
   render();
 }
 
+function zoomFromSlider() {
+  const rect = map.getBoundingClientRect();
+  changeZoom(Number(zoomSlider.value) - view.zoom, rect.left + rect.width / 2, rect.top + rect.height / 2);
+}
+
 async function switchMap(nextMapId) {
   if (!MAPS[nextMapId] || activeMapId === nextMapId) return;
   activeMapId = nextMapId;
@@ -775,6 +787,7 @@ deepGuildBaseInput.addEventListener("change", () => {
   render();
 });
 mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
+zoomSlider.addEventListener("input", zoomFromSlider);
 
 editForm.addEventListener("submit", async (event) => {
   event.preventDefault();
@@ -792,7 +805,7 @@ editForm.addEventListener("submit", async (event) => {
 });
 
 map.addEventListener("pointerdown", (event) => {
-  if (placing || event.target.closest(".map-tabs")) return;
+  if (placing || event.target.closest(".map-tabs, .zoom-control")) return;
   isDragging = true;
   dragStart = {
     pointerId: event.pointerId,
@@ -822,7 +835,7 @@ map.addEventListener("pointerup", (event) => {
 });
 
 map.addEventListener("click", (event) => {
-  if (!placing || event.target.closest(".map-tabs")) return;
+  if (!placing || event.target.closest(".map-tabs, .zoom-control")) return;
   const marker = markers.find((item) => item.id === movingMarkerId);
   if (marker) {
     selectedMarkerId = null;
@@ -854,6 +867,22 @@ async function loadAdminStatus() {
   const { data, error } = await supabaseClient.rpc("is_map_admin");
   isAdmin = !error && Boolean(data);
   adminBadge.classList.toggle("hidden", !isAdmin);
+}
+
+async function resetDeepDesertIfChanged() {
+  const { data, error } = await supabaseClient.rpc("reset_deep_desert_if_changed", {
+    next_signature: deepDesertSignature,
+  });
+
+  if (error) {
+    modeHint.textContent = "Deep Desert weekly reset check is not installed yet. Run the latest Supabase query when ready.";
+    return;
+  }
+
+  if (data) {
+    markers = markers.filter((marker) => marker.mapId !== "deep");
+    modeHint.textContent = "A new Deep Desert map was detected, so old Deep Desert markers were cleared.";
+  }
 }
 
 async function loadMarkers() {
@@ -931,6 +960,7 @@ async function connectSupabase() {
   }
 
   await loadAdminStatus();
+  await resetDeepDesertIfChanged();
   await loadMarkers();
   connectEvents();
 }

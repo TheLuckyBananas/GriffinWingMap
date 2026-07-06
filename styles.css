@@ -179,12 +179,35 @@ h2 {
   position: absolute;
   display: grid;
   place-items: center;
-  color: rgba(255, 255, 255, 0.82);
-  font-size: 0.7rem;
-  font-weight: 800;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.68rem;
+  font-weight: 500;
   letter-spacing: 0.02em;
   text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   transform: translate(-50%, -50%);
+}
+
+.zoom-control {
+  position: absolute;
+  z-index: 5;
+  right: 14px;
+  bottom: 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(8, 8, 6, 0.86);
+  box-shadow: var(--shadow);
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.zoom-control input {
+  width: 118px;
+  padding: 0;
+  accent-color: var(--gold);
 }
 
 .grid-label.sector {

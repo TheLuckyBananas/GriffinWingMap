@@ -4,14 +4,14 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Griffin Wing Base Map</title>
-    <link rel="stylesheet" href="./styles.css?v=14">
+    <link rel="stylesheet" href="./styles.css?v=15">
   </head>
   <body>
     <main class="app-shell">
       <section class="toolbar" aria-label="Map controls">
         <div>
           <p class="eyebrow">Dune: Awakening</p>
-          <h1>Griffin Wing Base Map</h1>
+          <h1 id="pageTitle">Griffin Wing Base Map</h1>
         </div>
         <div class="status-group">
           <span id="adminBadge" class="badge hidden">Host admin</span>
@@ -28,6 +28,10 @@
           <div id="tileLayer" class="tile-layer"></div>
           <div id="gridLayer" class="grid-layer hidden" aria-hidden="true"></div>
           <div id="markerLayer" class="marker-layer"></div>
+          <label class="zoom-control" aria-label="Map zoom">
+            <span>Zoom</span>
+            <input id="zoomSlider" type="range" min="1" max="4" step="1" value="2">
+          </label>
         </div>
 
         <aside class="side-panel" aria-label="Base marker details">
@@ -113,6 +117,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=4"></script>
-    <script src="./app.js?v=14"></script>
+    <script src="./app.js?v=15"></script>
   </body>
 </html>
