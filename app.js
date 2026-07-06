@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v16";
+const APP_VERSION = "v17";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 
 const config = window.GRIFFIN_SUPABASE || {};
@@ -43,6 +43,7 @@ const markerTypeField = document.querySelector("#markerTypeField");
 const markerTypeInput = document.querySelector("#markerType");
 const placeButton = document.querySelector("#placeButton");
 const cancelButton = document.querySelector("#cancelButton");
+const actionRow = placeButton.closest(".actions");
 const modeHint = document.querySelector("#modeHint");
 const baseLimitHint = document.querySelector("#baseLimitHint");
 const userIdHint = document.querySelector("#userIdHint");
@@ -369,12 +370,17 @@ function renderMarkerSection(title, sectionMarkers) {
       details.appendChild(seitch);
     }
 
-    const helper = document.createElement("small");
-    helper.textContent = [
+    const helperText = [
       marker.claimedByMe ? "Claimed by you." : "",
-      canEdit ? marker.targetType === "enemy" ? "Enemy marker can be removed by anyone." : "You can move or edit this marker." : "Placed by another member.",
+      marker.targetType === "enemy" ? "Enemy marker can be removed by anyone." : "",
+      !canEdit && marker.targetType !== "enemy" ? "Placed by another member." : "",
     ].filter(Boolean).join(" ");
-    details.appendChild(helper);
+
+    if (helperText) {
+      const helper = document.createElement("small");
+      helper.textContent = helperText;
+      details.appendChild(helper);
+    }
 
     const actions = document.createElement("div");
     actions.className = "base-item-actions";
@@ -438,11 +444,13 @@ function renderControls() {
   deepZoneField.classList.toggle("hidden", !deepBaseMode);
   deepGuildField.classList.toggle("hidden", !deepBaseMode);
   markerTypeField.classList.toggle("hidden", !isAdmin || enemyMode);
-  baseLimitHint.classList.toggle("hidden", enemyMode);
+  baseLimitHint.classList.toggle("hidden", isDeepMap() || enemyMode);
+  actionRow.classList.toggle("centered", !isDeepMap());
   mapTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mapId === activeMapId));
   map.setAttribute("aria-label", `${activeMap().title} map`);
   pageTitle.textContent = isDeepMap() ? "DD Bases and Enemy Locations" : "Griffin Wing Base Map";
   zoomSlider.value = String(view.zoom);
+  syncMarkerTypeOptions();
 }
 
 function render() {
@@ -477,7 +485,7 @@ function ownedBaseCount() {
 
 function updateBaseLimitHint() {
   if (isDeepMap()) {
-    baseLimitHint.textContent = "Deep Desert placement is unlimited.";
+    baseLimitHint.textContent = "";
     placeButton.disabled = false;
     return;
   }
@@ -730,6 +738,13 @@ function startPlacing() {
 }
 
 function startMoving(marker) {
+  if (movingMarkerId === marker.id) {
+    cancelPlacement();
+    selectedMarkerId = null;
+    render();
+    return;
+  }
+
   selectedMarkerId = marker.id;
   placing = true;
   movingMarkerId = marker.id;
@@ -744,6 +759,7 @@ function startMoving(marker) {
 function cancelPlacement() {
   placing = false;
   movingMarkerId = null;
+  selectedMarkerId = null;
   map.classList.remove("placing");
   placeButton.textContent = "Place marker";
   cancelButton.classList.add("hidden");
@@ -792,8 +808,20 @@ async function switchMap(nextMapId) {
   map.classList.remove("placing");
   placeButton.textContent = "Place marker";
   cancelButton.classList.add("hidden");
-  modeHint.textContent = `Viewing ${activeMap().title}.`;
+  modeHint.textContent = "";
   centerMap();
+}
+
+function syncMarkerTypeOptions() {
+  const enemyOption = markerTypeInput.querySelector('option[value="enemy"]');
+  if (!enemyOption) return;
+
+  enemyOption.hidden = !isDeepMap();
+  enemyOption.disabled = !isDeepMap();
+
+  if (!isDeepMap() && markerTypeInput.value === "enemy") {
+    markerTypeInput.value = "other";
+  }
 }
 
 placeButton.textContent = "Place marker";

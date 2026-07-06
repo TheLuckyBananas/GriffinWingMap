@@ -401,6 +401,14 @@ select:focus {
   margin-top: 12px;
 }
 
+.actions.centered {
+  justify-content: center;
+}
+
+.actions.centered #placeButton {
+  flex: 0 1 180px;
+}
+
 button {
   border: 0;
   border-radius: 8px;
