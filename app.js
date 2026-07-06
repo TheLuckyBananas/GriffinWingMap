@@ -24,6 +24,13 @@ const baseList = document.querySelector("#baseList");
 const baseCount = document.querySelector("#baseCount");
 const syncStatus = document.querySelector("#syncStatus");
 const adminBadge = document.querySelector("#adminBadge");
+const editDialog = document.querySelector("#editDialog");
+const editForm = document.querySelector("#editForm");
+const editPlayerNameInput = document.querySelector("#editPlayerName");
+const editSeitchNameInput = document.querySelector("#editSeitchName");
+const editGuildField = document.querySelector("#editGuildField");
+const editGuildAccessInput = document.querySelector("#editGuildAccess");
+const editCancelButton = document.querySelector("#editCancelButton");
 
 syncStatus.textContent = "Loading app v3";
 
@@ -35,6 +42,7 @@ let isDragging = false;
 let dragStart = null;
 let isAdmin = false;
 let currentUserId = null;
+let editingMarkerId = null;
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
 if (savedName) playerNameInput.value = savedName;
@@ -117,6 +125,7 @@ function renderTiles() {
 }
 
 function markerIconClass(marker) {
+  if (marker.iconType === "guild") return "guild";
   return marker.iconType === "other" ? "other" : marker.ownerId === currentUserId || marker.claimedByMe ? "own" : "other";
 }
 
@@ -400,37 +409,49 @@ async function deleteMarker(marker) {
   render();
 }
 
-async function editMarkerDetails(marker) {
-  const nextPlayerName = prompt("Base owner name", marker.playerName || "");
-  if (nextPlayerName === null) return;
-
-  const cleanPlayerName = nextPlayerName.trim().replace(/\s+/g, " ");
+async function saveMarkerDetails(marker) {
+  const cleanPlayerName = editPlayerNameInput.value.trim().replace(/\s+/g, " ");
   if (!cleanPlayerName) {
+    editPlayerNameInput.focus();
     modeHint.textContent = "Base owner name cannot be blank.";
-    return;
+    return false;
   }
 
-  const nextSeitchName = prompt("Seitch Name", marker.seitchName || "");
-  if (nextSeitchName === null) return;
+  const updates = {
+    player_name: cleanPlayerName,
+    seitch_name: editSeitchNameInput.value.trim().replace(/\s+/g, " "),
+  };
+
+  if (isAdmin) {
+    updates.icon_type = editGuildAccessInput.checked ? "guild" : marker.iconType === "guild" ? "auto" : marker.iconType;
+  }
 
   const { data, error } = await supabaseClient
     .from("base_markers")
-    .update({
-      player_name: cleanPlayerName,
-      seitch_name: nextSeitchName.trim().replace(/\s+/g, " "),
-    })
+    .update(updates)
     .eq("id", marker.id)
     .select()
     .single();
 
   if (error) {
     modeHint.textContent = error.message || "Could not edit base details.";
-    return;
+    return false;
   }
 
   upsertMarker(normalizeMarker(data));
   modeHint.textContent = "Base details updated. Connected guild members will see it automatically.";
   render();
+  return true;
+}
+
+function editMarkerDetails(marker) {
+  editingMarkerId = marker.id;
+  editPlayerNameInput.value = marker.playerName || "";
+  editSeitchNameInput.value = marker.seitchName || "";
+  editGuildAccessInput.checked = marker.iconType === "guild";
+  editGuildField.classList.toggle("hidden", !isAdmin);
+  editDialog.showModal();
+  editPlayerNameInput.focus();
 }
 
 async function toggleClaim(marker) {
@@ -529,6 +550,21 @@ function changeZoom(delta, clientX, clientY) {
 
 placeButton.addEventListener("click", startPlacing);
 cancelButton.addEventListener("click", cancelPlacement);
+editCancelButton.addEventListener("click", () => editDialog.close());
+editForm.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  const marker = markers.find((item) => item.id === editingMarkerId);
+  if (!marker) {
+    editDialog.close();
+    return;
+  }
+
+  const saved = await saveMarkerDetails(marker);
+  if (saved) {
+    editDialog.close();
+    editingMarkerId = null;
+  }
+});
 
 map.addEventListener("pointerdown", (event) => {
   if (placing) return;
