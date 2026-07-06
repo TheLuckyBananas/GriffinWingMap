@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Griffin Wing Base Map</title>
-    <link rel="stylesheet" href="./styles.css?v=11">
+    <link rel="stylesheet" href="./styles.css?v=12">
   </head>
   <body>
     <main class="app-shell">
@@ -21,6 +21,10 @@
 
       <section class="map-panel">
         <div id="map" class="map" aria-label="Hagga Basin map">
+          <div class="map-tabs" aria-label="Map selector">
+            <button id="haggaTab" class="map-tab active" type="button" data-map-id="hagga">Hagga Basin</button>
+            <button id="deepTab" class="map-tab" type="button" data-map-id="deep">Deep Desert</button>
+          </div>
           <div id="tileLayer" class="tile-layer"></div>
           <div id="markerLayer" class="marker-layer"></div>
         </div>
@@ -31,9 +35,22 @@
             <input id="playerName" type="text" maxlength="40" autocomplete="nickname" placeholder="Example: LuckyBananas">
           </label>
 
-          <label class="field">
+          <label id="seitchField" class="field">
             <span>Seitch Name</span>
             <input id="seitchName" type="text" maxlength="40" autocomplete="organization" placeholder="Example: Seitch Ramal">
+          </label>
+
+          <label id="deepTypeField" class="field hidden">
+            <span>Location type</span>
+            <select id="deepMarkerType">
+              <option value="enemy">Enemy base</option>
+              <option value="base">Guild/member base</option>
+            </select>
+          </label>
+
+          <label id="deepZoneField" class="checkbox-field hidden">
+            <input id="deepPvpZone" type="checkbox">
+            <span>PvP area</span>
           </label>
 
           <label id="markerTypeField" class="field hidden">
@@ -89,6 +106,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=4"></script>
-    <script src="./app.js?v=10"></script>
+    <script src="./app.js?v=12"></script>
   </body>
 </html>

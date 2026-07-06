@@ -1,10 +1,25 @@
-const TILE_URL = "https://cdn.th.gl/dune-awakening/map-tiles/survival_1-0c70ddebb3e41cf49915b22e103e94ed/{z}/{x}/{y}.webp?v=1";
+const MAPS = {
+  hagga: {
+    id: "hagga",
+    title: "Hagga Basin",
+    tileUrl: "https://cdn.th.gl/dune-awakening/map-tiles/survival_1-0c70ddebb3e41cf49915b22e103e94ed/{z}/{y}/{x}.webp?v=1",
+    emptyText: "No guild bases placed yet.",
+  },
+  deep: {
+    id: "deep",
+    title: "Deep Desert",
+    tileUrl: "https://cdn.th.gl/dune-awakening/map-tiles/deepdesert_1-ce84793aea1d9e14e5898d7d10beb670/{z}/{y}/{x}.webp?v=1",
+    emptyText: "No Deep Desert locations placed yet.",
+  },
+};
+
 const TILE_SIZE = 256;
 const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v10";
+const APP_VERSION = "v12";
+const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 
 const config = window.GRIFFIN_SUPABASE || {};
 const supabaseClient = window.supabase?.createClient(config.url, config.anonKey);
@@ -14,6 +29,11 @@ const tileLayer = document.querySelector("#tileLayer");
 const markerLayer = document.querySelector("#markerLayer");
 const playerNameInput = document.querySelector("#playerName");
 const seitchNameInput = document.querySelector("#seitchName");
+const seitchField = document.querySelector("#seitchField");
+const deepTypeField = document.querySelector("#deepTypeField");
+const deepMarkerTypeInput = document.querySelector("#deepMarkerType");
+const deepZoneField = document.querySelector("#deepZoneField");
+const deepPvpZoneInput = document.querySelector("#deepPvpZone");
 const markerTypeField = document.querySelector("#markerTypeField");
 const markerTypeInput = document.querySelector("#markerType");
 const placeButton = document.querySelector("#placeButton");
@@ -32,6 +52,7 @@ const editSeitchNameInput = document.querySelector("#editSeitchName");
 const editGuildField = document.querySelector("#editGuildField");
 const editGuildAccessInput = document.querySelector("#editGuildAccess");
 const editCancelButton = document.querySelector("#editCancelButton");
+const mapTabs = [...document.querySelectorAll(".map-tab")];
 
 syncStatus.textContent = `Loading app ${APP_VERSION}`;
 
@@ -44,6 +65,7 @@ let dragStart = null;
 let isAdmin = false;
 let currentUserId = null;
 let editingMarkerId = null;
+let activeMapId = "hagga";
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
 if (savedName) playerNameInput.value = savedName;
@@ -55,6 +77,14 @@ const view = {
   offsetX: 0,
   offsetY: 0,
 };
+
+function activeMap() {
+  return MAPS[activeMapId];
+}
+
+function isDeepMap() {
+  return activeMapId === "deep";
+}
 
 function worldSize(zoom = view.zoom) {
   return TILE_SIZE * 2 ** zoom;
@@ -87,7 +117,24 @@ function centerMap() {
 }
 
 function tileUrl(z, x, y) {
-  return TILE_URL.replace("{z}", z).replace("{x}", y).replace("{y}", x);
+  return activeMap().tileUrl
+    .replace("{z}", z)
+    .replace("{x}", x)
+    .replace("{y}", y);
+}
+
+async function refreshMapTileUrls() {
+  const response = await fetch(VERSION_URL, { cache: "no-store" });
+  if (!response.ok) return;
+
+  const version = await response.json();
+  const tiles = version?.data?.tiles || {};
+  for (const [mapId, tileKey] of Object.entries({ hagga: "survival_1", deep: "deepdesert_1" })) {
+    const tile = tiles[tileKey];
+    if (tile?.url) {
+      MAPS[mapId].tileUrl = `https://cdn.th.gl/dune-awakening${tile.url}?v=1`;
+    }
+  }
 }
 
 function renderTiles() {
@@ -101,7 +148,7 @@ function renderTiles() {
 
   for (let x = startX; x <= endX; x += 1) {
     for (let y = startY; y <= endY; y += 1) {
-      const key = `${view.zoom}:${x}:${y}`;
+      const key = `${activeMapId}:${view.zoom}:${x}:${y}`;
       wanted.add(key);
       let img = tileLayer.querySelector(`[data-key="${key}"]`);
       if (!img) {
@@ -126,6 +173,7 @@ function renderTiles() {
 }
 
 function markerIconClass(marker) {
+  if (marker.targetType === "enemy") return "enemy";
   if (marker.iconType === "guild") return "guild";
   return marker.iconType === "other" ? "other" : marker.ownerId === currentUserId || marker.claimedByMe ? "own" : "other";
 }
@@ -135,13 +183,12 @@ function renderMarkers() {
   const size = worldSize();
 
   for (const marker of markers) {
-    const left = view.offsetX + marker.x * size;
-    const top = view.offsetY + marker.y * size;
+    if (marker.mapId !== activeMapId) continue;
 
     const markerWrap = document.createElement("div");
     markerWrap.className = "marker-wrap";
-    markerWrap.style.left = `${left}px`;
-    markerWrap.style.top = `${top}px`;
+    markerWrap.style.left = `${view.offsetX + marker.x * size}px`;
+    markerWrap.style.top = `${view.offsetY + marker.y * size}px`;
 
     const pin = document.createElement("button");
     pin.type = "button";
@@ -165,10 +212,14 @@ function renderMarkers() {
     labelName.textContent = marker.label;
     label.appendChild(labelName);
 
-    if (marker.seitchName) {
-      const seitchLine = document.createElement("small");
-      seitchLine.textContent = marker.seitchName;
-      label.appendChild(seitchLine);
+    const secondary = marker.mapId === "deep"
+      ? `${marker.zoneType.toUpperCase()} ${marker.targetType === "enemy" ? "Enemy Base" : "Base"}`
+      : marker.seitchName;
+
+    if (secondary) {
+      const secondaryLine = document.createElement("small");
+      secondaryLine.textContent = secondary;
+      label.appendChild(secondaryLine);
     }
 
     markerWrap.append(pin, label);
@@ -176,24 +227,29 @@ function renderMarkers() {
   }
 }
 
+function currentMapMarkers() {
+  return markers.filter((marker) => marker.mapId === activeMapId);
+}
+
 function renderList() {
   updateBaseLimitHint();
-  baseCount.textContent = String(markers.length);
+  const visibleMarkers = currentMapMarkers();
+  baseCount.textContent = String(visibleMarkers.length);
   baseList.replaceChildren();
 
-  if (!markers.length) {
+  if (!visibleMarkers.length) {
     const empty = document.createElement("p");
     empty.className = "empty";
-    empty.textContent = "No guild bases placed yet.";
+    empty.textContent = activeMap().emptyText;
     baseList.appendChild(empty);
     return;
   }
 
-  for (const marker of [...markers].sort((a, b) => a.label.localeCompare(b.label))) {
+  for (const marker of [...visibleMarkers].sort((a, b) => a.label.localeCompare(b.label))) {
     const isOwner = marker.ownerId === currentUserId;
     const canEdit = isAdmin || isOwner || marker.claimedByMe;
     const canDelete = isAdmin || isOwner;
-    const canClaim = !isOwner && !isAdmin;
+    const canClaim = !isOwner && !isAdmin && marker.targetType !== "enemy";
     const item = document.createElement("article");
     item.className = "base-item";
 
@@ -214,7 +270,11 @@ function renderList() {
     const details = document.createElement("div");
     details.className = "base-item-details";
 
-    if (marker.seitchName) {
+    if (marker.mapId === "deep") {
+      const locationType = document.createElement("small");
+      locationType.textContent = `${marker.targetType === "enemy" ? "Enemy base" : "Base"} - ${marker.zoneType.toUpperCase()}`;
+      details.appendChild(locationType);
+    } else if (marker.seitchName) {
       const seitch = document.createElement("small");
       seitch.textContent = `Seitch: ${marker.seitchName}`;
       details.appendChild(seitch);
@@ -265,32 +325,20 @@ function renderList() {
     item.append(title, details, actions);
     baseList.appendChild(item);
   }
-
-  normalizeBaseTileDetails();
 }
 
-function normalizeBaseTileDetails() {
-  for (const detail of baseList.querySelectorAll(".base-item > small")) {
-    const text = detail.textContent || "";
-    const match = text.match(/^(Seitch: .+?) ((Claimed by you\. )?(You can move or edit this marker\.|Placed by another member\.))$/);
-    if (!match) continue;
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "base-item-details";
-
-    const seitch = document.createElement("small");
-    seitch.textContent = match[1];
-
-    const helper = document.createElement("small");
-    helper.textContent = match[2];
-
-    wrapper.append(seitch, helper);
-    detail.replaceWith(wrapper);
-  }
+function renderControls() {
+  seitchField.classList.toggle("hidden", isDeepMap());
+  deepTypeField.classList.toggle("hidden", !isDeepMap());
+  deepZoneField.classList.toggle("hidden", !isDeepMap());
+  markerTypeField.classList.toggle("hidden", !isAdmin);
+  mapTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mapId === activeMapId));
+  map.setAttribute("aria-label", `${activeMap().title} map`);
 }
 
 function render() {
   clampView();
+  renderControls();
   renderTiles();
   renderMarkers();
   renderList();
@@ -314,7 +362,7 @@ function seitchName() {
 }
 
 function ownedBaseCount() {
-  return markers.filter((marker) => marker.ownerId === currentUserId).length;
+  return markers.filter((marker) => marker.mapId === activeMapId && marker.ownerId === currentUserId).length;
 }
 
 function updateBaseLimitHint() {
@@ -325,7 +373,7 @@ function updateBaseLimitHint() {
   }
 
   const used = ownedBaseCount();
-  baseLimitHint.textContent = `Your bases: ${used}/${MEMBER_BASE_LIMIT}`;
+  baseLimitHint.textContent = `Your ${activeMap().title} markers: ${used}/${MEMBER_BASE_LIMIT}`;
   placeButton.disabled = used >= MEMBER_BASE_LIMIT && !movingMarkerId;
 }
 
@@ -333,12 +381,15 @@ function normalizeMarker(row) {
   return {
     id: row.id,
     ownerId: row.owner_id,
+    mapId: row.map_id || "hagga",
     playerName: row.player_name,
     seitchName: row.seitch_name || "",
     label: row.label,
     x: row.x,
     y: row.y,
     type: row.type,
+    targetType: row.target_type || row.type || "base",
+    zoneType: row.zone_type || "pve",
     iconType: row.icon_type,
     claimedByMe: Boolean(row.claimedByMe),
     createdAt: row.created_at,
@@ -348,9 +399,13 @@ function normalizeMarker(row) {
 
 function markerPayload(point, marker) {
   const name = playerName();
+  const targetType = isDeepMap() ? deepMarkerTypeInput.value : "base";
   return {
     player_name: marker?.playerName || name,
-    seitch_name: marker?.seitchName || seitchName(),
+    seitch_name: isDeepMap() ? "" : marker?.seitchName || seitchName(),
+    map_id: marker?.mapId || activeMapId,
+    target_type: marker?.targetType || targetType,
+    zone_type: marker?.zoneType || (isDeepMap() ? (deepPvpZoneInput.checked ? "pvp" : "pve") : "pve"),
     icon_type: isAdmin ? markerTypeInput.value : "auto",
     x: point.x,
     y: point.y,
@@ -379,7 +434,7 @@ async function saveMarker(point, marker = null) {
   const name = playerName();
   if (!name) {
     playerNameInput.focus();
-    modeHint.textContent = "Enter your name first, then place your base.";
+    modeHint.textContent = "Enter your name first, then place the marker.";
     return;
   }
 
@@ -395,12 +450,13 @@ async function saveMarker(point, marker = null) {
       .select()
       .single();
   } else {
+    const targetType = isDeepMap() ? deepMarkerTypeInput.value : "base";
     query = supabaseClient
       .from("base_markers")
       .insert({
         owner_id: currentUserId,
-        label: `${name}'s Base`,
-        type: "base",
+        label: targetType === "enemy" ? `Enemy Base - ${name}` : `${name}'s Base`,
+        type: targetType,
         ...markerPayload(point),
       })
       .select()
@@ -419,9 +475,9 @@ async function saveMarker(point, marker = null) {
   if (wasMoving) selectedMarkerId = null;
   upsertMarker(normalizeMarker(data));
   map.classList.remove("placing");
-  placeButton.textContent = "Place my base";
+  placeButton.textContent = "Place marker";
   cancelButton.classList.add("hidden");
-  modeHint.textContent = "Base saved. Connected guild members will see it automatically.";
+  modeHint.textContent = "Marker saved. Connected guild members will see it automatically.";
   render();
 }
 
@@ -437,7 +493,7 @@ async function deleteMarker(marker) {
   }
 
   removeMarker(marker.id);
-  modeHint.textContent = "Base deleted. Connected guild members will see it automatically.";
+  modeHint.textContent = "Marker deleted. Connected guild members will see it automatically.";
   render();
 }
 
@@ -445,13 +501,13 @@ async function saveMarkerDetails(marker) {
   const cleanPlayerName = editPlayerNameInput.value.trim().replace(/\s+/g, " ");
   if (!cleanPlayerName) {
     editPlayerNameInput.focus();
-    modeHint.textContent = "Base owner name cannot be blank.";
+    modeHint.textContent = "Name cannot be blank.";
     return false;
   }
 
   const updates = {
     player_name: cleanPlayerName,
-    seitch_name: editSeitchNameInput.value.trim().replace(/\s+/g, " "),
+    seitch_name: marker.mapId === "deep" ? "" : editSeitchNameInput.value.trim().replace(/\s+/g, " "),
   };
 
   if (isAdmin) {
@@ -466,12 +522,12 @@ async function saveMarkerDetails(marker) {
     .single();
 
   if (error) {
-    modeHint.textContent = error.message || "Could not edit base details.";
+    modeHint.textContent = error.message || "Could not edit marker details.";
     return false;
   }
 
   upsertMarker(normalizeMarker(data));
-  modeHint.textContent = "Base details updated. Connected guild members will see it automatically.";
+  modeHint.textContent = "Marker details updated. Connected guild members will see it automatically.";
   render();
   return true;
 }
@@ -480,8 +536,9 @@ function editMarkerDetails(marker) {
   editingMarkerId = marker.id;
   editPlayerNameInput.value = marker.playerName || "";
   editSeitchNameInput.value = marker.seitchName || "";
+  editSeitchNameInput.closest(".field").classList.toggle("hidden", marker.mapId === "deep");
   editGuildAccessInput.checked = marker.iconType === "guild";
-  editGuildField.classList.toggle("hidden", !isAdmin);
+  editGuildField.classList.toggle("hidden", !isAdmin || marker.targetType === "enemy");
   editDialog.showModal();
   editPlayerNameInput.focus();
 }
@@ -495,24 +552,24 @@ async function toggleClaim(marker) {
       .eq("user_id", currentUserId);
 
     if (error) {
-      modeHint.textContent = error.message || "Could not unclaim base.";
+      modeHint.textContent = error.message || "Could not unclaim marker.";
       return;
     }
 
     setMarkerClaim(marker.id, false);
-    modeHint.textContent = "Base unclaimed. It will now appear as another member's base.";
+    modeHint.textContent = "Marker unclaimed. It will now appear as another member's marker.";
   } else {
     const { error } = await supabaseClient
       .from("base_marker_claims")
       .insert({ marker_id: marker.id, user_id: currentUserId });
 
     if (error) {
-      modeHint.textContent = error.message || "Could not claim base.";
+      modeHint.textContent = error.message || "Could not claim marker.";
       return;
     }
 
     setMarkerClaim(marker.id, true);
-    modeHint.textContent = "Base claimed. It will now use your base icon.";
+    modeHint.textContent = "Marker claimed. It will now use your base icon.";
   }
 
   render();
@@ -520,7 +577,7 @@ async function toggleClaim(marker) {
 
 function startPlacing() {
   if (!isAdmin && ownedBaseCount() >= MEMBER_BASE_LIMIT) {
-    modeHint.textContent = `Members can place up to ${MEMBER_BASE_LIMIT} bases. Delete one first to place another.`;
+    modeHint.textContent = `Members can place up to ${MEMBER_BASE_LIMIT} markers on this map. Delete one first to place another.`;
     updateBaseLimitHint();
     return;
   }
@@ -530,7 +587,7 @@ function startPlacing() {
   map.classList.add("placing");
   placeButton.textContent = "Click the map";
   cancelButton.classList.remove("hidden");
-  modeHint.textContent = "Click the exact spot where your base is located.";
+  modeHint.textContent = "Click the exact spot for this marker.";
 }
 
 function startMoving(marker) {
@@ -539,7 +596,7 @@ function startMoving(marker) {
   movingMarkerId = marker.id;
   if (isAdmin) markerTypeInput.value = marker.iconType || "other";
   map.classList.add("placing");
-  placeButton.textContent = "Moving base";
+  placeButton.textContent = "Moving marker";
   cancelButton.classList.remove("hidden");
   modeHint.textContent = `Click the new location for ${marker.label}.`;
   render();
@@ -549,9 +606,9 @@ function cancelPlacement() {
   placing = false;
   movingMarkerId = null;
   map.classList.remove("placing");
-  placeButton.textContent = "Place my base";
+  placeButton.textContent = "Place marker";
   cancelButton.classList.add("hidden");
-  modeHint.textContent = "Pan and zoom the map. Choose Place my base, then click your base location.";
+  modeHint.textContent = "Pan and zoom the map. Choose Place marker, then click the location.";
 }
 
 function focusMarker(marker) {
@@ -580,9 +637,27 @@ function changeZoom(delta, clientX, clientY) {
   render();
 }
 
+async function switchMap(nextMapId) {
+  if (!MAPS[nextMapId] || activeMapId === nextMapId) return;
+  activeMapId = nextMapId;
+  placing = false;
+  movingMarkerId = null;
+  selectedMarkerId = null;
+  view.zoom = INITIAL_ZOOM;
+  tileLayer.replaceChildren();
+  map.classList.remove("placing");
+  placeButton.textContent = "Place marker";
+  cancelButton.classList.add("hidden");
+  modeHint.textContent = `Viewing ${activeMap().title}.`;
+  centerMap();
+}
+
+placeButton.textContent = "Place marker";
 placeButton.addEventListener("click", startPlacing);
 cancelButton.addEventListener("click", cancelPlacement);
 editCancelButton.addEventListener("click", () => editDialog.close());
+mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
+
 editForm.addEventListener("submit", async (event) => {
   event.preventDefault();
   const marker = markers.find((item) => item.id === editingMarkerId);
@@ -599,7 +674,7 @@ editForm.addEventListener("submit", async (event) => {
 });
 
 map.addEventListener("pointerdown", (event) => {
-  if (placing) return;
+  if (placing || event.target.closest(".map-tabs")) return;
   isDragging = true;
   dragStart = {
     pointerId: event.pointerId,
@@ -629,7 +704,7 @@ map.addEventListener("pointerup", (event) => {
 });
 
 map.addEventListener("click", (event) => {
-  if (!placing) return;
+  if (!placing || event.target.closest(".map-tabs")) return;
   const marker = markers.find((item) => item.id === movingMarkerId);
   if (marker) {
     selectedMarkerId = null;
@@ -661,7 +736,6 @@ async function loadAdminStatus() {
   const { data, error } = await supabaseClient.rpc("is_map_admin");
   isAdmin = !error && Boolean(data);
   adminBadge.classList.toggle("hidden", !isAdmin);
-  markerTypeField.classList.toggle("hidden", !isAdmin);
 }
 
 async function loadMarkers() {
@@ -712,6 +786,12 @@ function connectEvents() {
 }
 
 async function boot() {
+  try {
+    await refreshMapTileUrls();
+  } catch {
+    modeHint.textContent = "Using bundled map tiles. Weekly Deep Desert tiles may need a refresh later.";
+  }
+
   centerMap();
 
   if (!supabaseClient || !config.url || config.url.includes("PASTE_")) {
