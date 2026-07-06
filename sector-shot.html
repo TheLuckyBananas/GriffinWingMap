@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Deep Desert Sector Shot</title>
+  <style>
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: #050502;
+    }
+
+    #shot {
+      position: relative;
+      width: 768px;
+      height: 768px;
+      overflow: hidden;
+      background: #dca769;
+      border: 3px solid rgba(255, 255, 255, 0.82);
+      box-sizing: border-box;
+    }
+
+    .tile {
+      position: absolute;
+      width: 256px;
+      height: 256px;
+      user-select: none;
+      -webkit-user-drag: none;
+    }
+
+    .sector-label {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      color: rgba(255, 255, 255, 0.88);
+      font: 13px/1 Arial, sans-serif;
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+      z-index: 5;
+    }
+
+    .marker {
+      position: absolute;
+      width: 46px;
+      height: 46px;
+      transform: translate(-50%, -50%);
+      z-index: 6;
+      filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.55));
+    }
+
+    .marker::before,
+    .marker::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 48px;
+      height: 11px;
+      border: 3px solid #4a0000;
+      background: #ee2d2d;
+      box-sizing: border-box;
+      transform-origin: center;
+    }
+
+    .marker::before {
+      transform: translate(-50%, -50%) rotate(45deg);
+    }
+
+    .marker::after {
+      transform: translate(-50%, -50%) rotate(-45deg);
+    }
+  </style>
+</head>
+<body>
+  <div id="shot" aria-label="Deep Desert sector screenshot">
+    <span class="sector-label" id="sectorLabel"></span>
+    <span class="marker" id="marker"></span>
+  </div>
+
+  <script>
+    const TILE_SIZE = 256;
+    const SECTORS = 9;
+    const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
+    const FALLBACK_TILE_URL = "https://cdn.th.gl/dune-awakening/map-tiles/deepdesert_1-ce84793aea1d9e14e5898d7d10beb670/{z}/{y}/{x}.webp?v=1";
+    const params = new URLSearchParams(window.location.search);
+    const markerX = clamp(Number(params.get("x") || 0.5), 0, 1);
+    const markerY = clamp(Number(params.get("y") || 0.5), 0, 1);
+    const zoom = Math.max(0, Math.min(5, Number(params.get("zoom") || 4)));
+    const shot = document.querySelector("#shot");
+    const marker = document.querySelector("#marker");
+    const sectorLabel = document.querySelector("#sectorLabel");
+
+    function clamp(value, min, max) {
+      return Math.max(min, Math.min(max, Number.isFinite(value) ? value : min));
+    }
+
+    function sectorName(column, row) {
+      return `${"ABCDEFGHI"[8 - row]}${column + 1}`;
+    }
+
+    function tileUrl(template, z, x, y) {
+      return template
+        .replace("{z}", z)
+        .replace("{x}", x)
+        .replace("{y}", y);
+    }
+
+    async function currentTileUrl() {
+      try {
+        const response = await fetch(VERSION_URL, { cache: "no-store" });
+        if (!response.ok) return FALLBACK_TILE_URL;
+        const version = await response.json();
+        const tile = version?.data?.tiles?.deepdesert_1;
+        if (tile?.url) return `https://cdn.th.gl/dune-awakening${tile.url}?v=1`;
+      } catch (error) {
+        console.warn(error);
+      }
+      return FALLBACK_TILE_URL;
+    }
+
+    function waitForImage(img) {
+      return new Promise((resolve) => {
+        img.addEventListener("load", resolve, { once: true });
+        img.addEventListener("error", resolve, { once: true });
+      });
+    }
+
+    async function render() {
+      const tileTemplate = await currentTileUrl();
+      const worldSize = TILE_SIZE * 2 ** zoom;
+      const sectorColumn = Math.max(0, Math.min(8, Math.floor(markerX * SECTORS)));
+      const sectorRow = Math.max(0, Math.min(8, Math.floor(markerY * SECTORS)));
+      const sectorSize = worldSize / SECTORS;
+      const cropLeft = sectorColumn * sectorSize;
+      const cropTop = sectorRow * sectorSize;
+      const scale = shot.clientWidth / sectorSize;
+      const firstTileX = Math.max(0, Math.floor(cropLeft / TILE_SIZE));
+      const firstTileY = Math.max(0, Math.floor(cropTop / TILE_SIZE));
+      const lastTileX = Math.min((2 ** zoom) - 1, Math.floor((cropLeft + sectorSize - 1) / TILE_SIZE));
+      const lastTileY = Math.min((2 ** zoom) - 1, Math.floor((cropTop + sectorSize - 1) / TILE_SIZE));
+      const pending = [];
+
+      sectorLabel.textContent = sectorName(sectorColumn, sectorRow);
+
+      for (let x = firstTileX; x <= lastTileX; x += 1) {
+        for (let y = firstTileY; y <= lastTileY; y += 1) {
+          const img = document.createElement("img");
+          img.className = "tile";
+          img.decoding = "sync";
+          img.draggable = false;
+          img.src = tileUrl(tileTemplate, zoom, x, y);
+          img.style.left = `${(x * TILE_SIZE - cropLeft) * scale}px`;
+          img.style.top = `${(y * TILE_SIZE - cropTop) * scale}px`;
+          img.style.width = `${TILE_SIZE * scale}px`;
+          img.style.height = `${TILE_SIZE * scale}px`;
+          shot.insertBefore(img, sectorLabel);
+          pending.push(waitForImage(img));
+        }
+      }
+
+      marker.style.left = `${((markerX * worldSize - cropLeft) / sectorSize) * 100}%`;
+      marker.style.top = `${((markerY * worldSize - cropTop) / sectorSize) * 100}%`;
+      await Promise.all(pending);
+      await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+      document.body.dataset.ready = "true";
+    }
+
+    render();
+  </script>
+</body>
+</html>
