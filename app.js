@@ -4,6 +4,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
+const APP_VERSION = "v10";
 
 const config = window.GRIFFIN_SUPABASE || {};
 const supabaseClient = window.supabase?.createClient(config.url, config.anonKey);
@@ -32,7 +33,7 @@ const editGuildField = document.querySelector("#editGuildField");
 const editGuildAccessInput = document.querySelector("#editGuildAccess");
 const editCancelButton = document.querySelector("#editCancelButton");
 
-syncStatus.textContent = "Loading app v3";
+syncStatus.textContent = `Loading app ${APP_VERSION}`;
 
 let markers = [];
 let placing = false;
@@ -263,6 +264,28 @@ function renderList() {
 
     item.append(title, details, actions);
     baseList.appendChild(item);
+  }
+
+  normalizeBaseTileDetails();
+}
+
+function normalizeBaseTileDetails() {
+  for (const detail of baseList.querySelectorAll(".base-item > small")) {
+    const text = detail.textContent || "";
+    const match = text.match(/^(Seitch: .+?) ((Claimed by you\. )?(You can move or edit this marker\.|Placed by another member\.))$/);
+    if (!match) continue;
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "base-item-details";
+
+    const seitch = document.createElement("small");
+    seitch.textContent = match[1];
+
+    const helper = document.createElement("small");
+    helper.textContent = match[2];
+
+    wrapper.append(seitch, helper);
+    detail.replaceWith(wrapper);
   }
 }
 
