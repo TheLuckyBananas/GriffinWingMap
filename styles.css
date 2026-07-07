@@ -247,19 +247,9 @@ h2 {
   width: 38px;
   height: 38px;
   transform: translate(-50%, -50%);
-}
-
-.spice-field::before {
-  content: "";
-  position: absolute;
-  inset: 5px;
-  border: 2px solid rgba(255, 239, 184, 0.95);
-  border-radius: 50% 50% 46% 46%;
-  background:
-    radial-gradient(circle at 42% 38%, rgba(255, 240, 172, 0.95) 0 20%, transparent 21%),
-    radial-gradient(circle at 58% 58%, rgba(219, 120, 32, 0.95) 0 36%, transparent 37%),
-    radial-gradient(circle at 50% 50%, rgba(176, 81, 20, 0.96), rgba(105, 43, 12, 0.98));
-  box-shadow: 0 7px 12px rgba(0, 0, 0, 0.5);
+  pointer-events: auto;
+  background: url("./spice-field.png") center / contain no-repeat;
+  filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.58));
 }
 
 .spice-field-label {
