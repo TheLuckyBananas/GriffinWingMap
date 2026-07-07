@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v18";
+const APP_VERSION = "v19";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 
 const config = window.GRIFFIN_SUPABASE || {};
@@ -51,6 +51,7 @@ const baseList = document.querySelector("#baseList");
 const baseCount = document.querySelector("#baseCount");
 const syncStatus = document.querySelector("#syncStatus");
 const adminBadge = document.querySelector("#adminBadge");
+const deepResetStatus = document.querySelector("#deepResetStatus");
 const editDialog = document.querySelector("#editDialog");
 const editForm = document.querySelector("#editForm");
 const editPlayerNameInput = document.querySelector("#editPlayerName");
@@ -114,6 +115,26 @@ function updateMapUrl(mapId) {
 
 function isDeepMap() {
   return activeMapId === "deep";
+}
+
+function formatResetTimestamp(value) {
+  if (!value) return "";
+  const resetDate = new Date(value);
+  if (Number.isNaN(resetDate.getTime())) return "";
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    timeZoneName: "short",
+  }).format(resetDate);
+}
+
+function updateDeepResetStatus(value) {
+  const formatted = formatResetTimestamp(value);
+  deepResetStatus.classList.toggle("hidden", !formatted);
+  if (formatted) deepResetStatus.textContent = `DD reset: ${formatted}`;
 }
 
 function worldSize(zoom = view.zoom) {
@@ -964,6 +985,18 @@ async function resetDeepDesertIfChanged() {
     markers = markers.filter((marker) => marker.mapId !== "deep");
     modeHint.textContent = "A new Deep Desert map was detected, so old Deep Desert markers were cleared.";
   }
+
+  await loadDeepDesertResetTimestamp();
+}
+
+async function loadDeepDesertResetTimestamp() {
+  const { data, error } = await supabaseClient.rpc("deep_desert_reset_timestamp");
+  if (error) {
+    deepResetStatus.classList.add("hidden");
+    return;
+  }
+
+  updateDeepResetStatus(data);
 }
 
 async function loadMarkers() {
