@@ -1,0 +1,33 @@
+{
+  "description": "Large Deep Desert spice field overlay data. Add weekly entries under bySignature using the current deepdesert tile id as the key. Coordinates are normalized map positions from 0 to 1.",
+  "default": [],
+  "bySignature": {
+    "deepdesert_1-ce84793aea1d9e14e5898d7d10beb670": []
+  }
+}
+{
+  "bySignature": {
+    "deepdesert_1-0d22aa96e0f7e8eb77b2c3a6623dad7c": [
+      {
+        "x": 0.104736,
+        "y": 0.437687,
+        "label": "Large Spice Field 1"
+      },
+      {
+        "x": 0.438037,
+        "y": 0.395652,
+        "label": "Large Spice Field 2"
+      },
+      {
+        "x": 0.812793,
+        "y": 0.395653,
+        "label": "Large Spice Field 3"
+      },
+      {
+        "x": 0.771533,
+        "y": 0.104881,
+        "label": "Large Spice Field 4"
+      }
+    ]
+  }
+}
