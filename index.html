@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Griffin Wing Base Map</title>
-    <link rel="stylesheet" href="./styles.css?v=19">
+    <link rel="stylesheet" href="./styles.css?v=21">
   </head>
   <body>
     <main class="app-shell">
@@ -28,6 +28,7 @@
           </div>
           <div id="tileLayer" class="tile-layer"></div>
           <div id="gridLayer" class="grid-layer hidden" aria-hidden="true"></div>
+          <div id="spiceLayer" class="spice-layer hidden" aria-label="Large spice field locations"></div>
           <div id="markerLayer" class="marker-layer"></div>
           <label class="zoom-control" aria-label="Map zoom">
             <span>Zoom</span>
@@ -36,6 +37,23 @@
         </div>
 
         <aside class="side-panel" aria-label="Base marker details">
+          <label id="deepSpiceField" class="checkbox-field hidden">
+            <input id="deepSpiceToggle" type="checkbox">
+            <span>Show large spice fields</span>
+          </label>
+
+          <div id="spiceCapturePanel" class="spice-capture hidden">
+            <button id="spiceCaptureButton" class="secondary" type="button">Capture spice coordinates</button>
+            <div id="spiceCaptureTools" class="spice-capture-tools hidden">
+              <p id="spiceCaptureHint" class="hint">Click each large spice field center on the map.</p>
+              <div class="actions compact">
+                <button id="spiceUndoButton" class="secondary" type="button">Undo last</button>
+                <button id="spiceCopyButton" type="button">Copy JSON</button>
+              </div>
+              <textarea id="spiceCaptureOutput" readonly rows="6" spellcheck="false"></textarea>
+            </div>
+          </div>
+
           <label id="deepTypeField" class="field hidden">
             <span>Location type</span>
             <select id="deepMarkerType">
@@ -118,6 +136,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=4"></script>
-    <script src="./app.js?v=19"></script>
+    <script src="./app.js?v=21"></script>
   </body>
 </html>

@@ -18,8 +18,9 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v19";
+const APP_VERSION = "v21";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
+const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=2";
 
 const config = window.GRIFFIN_SUPABASE || {};
 const supabaseClient = window.supabase?.createClient(config.url, config.anonKey);
@@ -27,6 +28,7 @@ const supabaseClient = window.supabase?.createClient(config.url, config.anonKey)
 const map = document.querySelector("#map");
 const tileLayer = document.querySelector("#tileLayer");
 const gridLayer = document.querySelector("#gridLayer");
+const spiceLayer = document.querySelector("#spiceLayer");
 const markerLayer = document.querySelector("#markerLayer");
 const pageTitle = document.querySelector("#pageTitle");
 const zoomSlider = document.querySelector("#zoomSlider");
@@ -35,6 +37,15 @@ const seitchNameInput = document.querySelector("#seitchName");
 const seitchField = document.querySelector("#seitchField");
 const deepTypeField = document.querySelector("#deepTypeField");
 const deepMarkerTypeInput = document.querySelector("#deepMarkerType");
+const deepSpiceField = document.querySelector("#deepSpiceField");
+const deepSpiceToggle = document.querySelector("#deepSpiceToggle");
+const spiceCapturePanel = document.querySelector("#spiceCapturePanel");
+const spiceCaptureButton = document.querySelector("#spiceCaptureButton");
+const spiceCaptureTools = document.querySelector("#spiceCaptureTools");
+const spiceCaptureHint = document.querySelector("#spiceCaptureHint");
+const spiceUndoButton = document.querySelector("#spiceUndoButton");
+const spiceCopyButton = document.querySelector("#spiceCopyButton");
+const spiceCaptureOutput = document.querySelector("#spiceCaptureOutput");
 const deepZoneField = document.querySelector("#deepZoneField");
 const deepPvpZoneInput = document.querySelector("#deepPvpZone");
 const deepGuildField = document.querySelector("#deepGuildField");
@@ -64,6 +75,10 @@ const mapTabs = [...document.querySelectorAll(".map-tab")];
 syncStatus.textContent = `Loading app ${APP_VERSION}`;
 
 let markers = [];
+let spiceFieldData = { bySignature: {}, default: [] };
+let currentSpiceFields = [];
+let capturedSpiceFields = [];
+let capturingSpice = false;
 let placing = false;
 let movingMarkerId = null;
 let selectedMarkerId = null;
@@ -115,6 +130,81 @@ function updateMapUrl(mapId) {
 
 function isDeepMap() {
   return activeMapId === "deep";
+}
+
+function deepDesertSignatureId() {
+  const match = deepDesertSignature.match(/map-tiles\/([^/]+)\//);
+  return match?.[1] || deepDesertSignature;
+}
+
+function currentSpiceFieldData() {
+  const signatureId = deepDesertSignatureId();
+  return spiceFieldData.bySignature?.[signatureId] || spiceFieldData.default || [];
+}
+
+function visibleSpiceFields() {
+  return [...currentSpiceFields, ...capturedSpiceFields];
+}
+
+async function loadSpiceFieldData() {
+  try {
+    const response = await fetch(SPICE_FIELDS_URL, { cache: "no-store" });
+    if (!response.ok) return;
+    const data = await response.json();
+    spiceFieldData = {
+      bySignature: data.bySignature || {},
+      default: data.default || [],
+    };
+    currentSpiceFields = currentSpiceFieldData();
+  } catch {
+    currentSpiceFields = [];
+  }
+}
+
+function spiceCaptureJson() {
+  const signatureId = deepDesertSignatureId();
+  const fields = capturedSpiceFields.map((field, index) => ({
+    x: Number(field.x.toFixed(6)),
+    y: Number(field.y.toFixed(6)),
+    label: field.label || `Large Spice Field ${index + 1}`,
+  }));
+
+  return JSON.stringify({
+    bySignature: {
+      [signatureId]: fields,
+    },
+  }, null, 2);
+}
+
+function updateSpiceCaptureOutput() {
+  if (!spiceCaptureOutput) return;
+  spiceCaptureOutput.value = spiceCaptureJson();
+  spiceCaptureHint.textContent = capturedSpiceFields.length
+    ? `${capturedSpiceFields.length} spice field${capturedSpiceFields.length === 1 ? "" : "s"} captured. Copy JSON when done.`
+    : "Click each large spice field center on the map.";
+  spiceUndoButton.disabled = capturedSpiceFields.length === 0;
+  spiceCopyButton.disabled = capturedSpiceFields.length === 0;
+}
+
+function setSpiceCaptureMode(enabled) {
+  capturingSpice = Boolean(enabled);
+  if (capturingSpice) {
+    placing = false;
+    movingMarkerId = null;
+    selectedMarkerId = null;
+    map.classList.add("placing");
+    cancelButton.classList.remove("hidden");
+    deepSpiceToggle.checked = true;
+    modeHint.textContent = "Spice capture is active. Click each large spice field center.";
+  } else {
+    map.classList.remove("placing");
+    cancelButton.classList.add("hidden");
+    modeHint.textContent = "";
+  }
+  spiceCaptureButton.textContent = capturingSpice ? "Stop capture" : "Capture spice coordinates";
+  spiceCaptureTools.classList.toggle("hidden", !capturingSpice && capturedSpiceFields.length === 0);
+  updateSpiceCaptureOutput();
+  render();
 }
 
 function formatResetTimestamp(value) {
@@ -275,6 +365,29 @@ function sectorNameFromPoint(x, y) {
 function sectorName(column, row) {
   const lettersBottomToTop = "ABCDEFGHI";
   return `${lettersBottomToTop[8 - row]}${column + 1}`;
+}
+
+function renderSpiceFields() {
+  spiceLayer.replaceChildren();
+  const fields = visibleSpiceFields();
+  const visible = isDeepMap() && deepSpiceToggle.checked && fields.length > 0;
+  spiceLayer.classList.toggle("hidden", !visible);
+  if (!visible) return;
+
+  const size = worldSize();
+  for (const field of fields) {
+    const fieldWrap = document.createElement("div");
+    fieldWrap.className = "spice-field";
+    fieldWrap.style.left = `${view.offsetX + field.x * size}px`;
+    fieldWrap.style.top = `${view.offsetY + field.y * size}px`;
+    fieldWrap.title = field.label || "Large Spice Field";
+
+    const label = document.createElement("span");
+    label.className = "spice-field-label";
+    label.textContent = field.label || "Large Spice Field";
+    fieldWrap.appendChild(label);
+    spiceLayer.appendChild(fieldWrap);
+  }
 }
 
 function renderMarkers() {
@@ -484,6 +597,10 @@ function renderControls() {
   const deepBaseMode = isDeepMap() && deepMarkerTypeInput.value === "base";
   playerNameInput.closest(".field").classList.toggle("hidden", enemyMode);
   seitchField.classList.toggle("hidden", isDeepMap());
+  deepSpiceField.classList.toggle("hidden", !isDeepMap());
+  deepSpiceToggle.disabled = visibleSpiceFields().length === 0 && !isAdmin;
+  spiceCapturePanel.classList.toggle("hidden", !isAdmin || !isDeepMap());
+  spiceCaptureTools.classList.toggle("hidden", !capturingSpice && capturedSpiceFields.length === 0);
   deepTypeField.classList.toggle("hidden", !isDeepMap());
   deepZoneField.classList.toggle("hidden", !deepBaseMode);
   deepGuildField.classList.toggle("hidden", !deepBaseMode);
@@ -502,6 +619,7 @@ function render() {
   renderControls();
   renderTiles();
   renderGrid();
+  renderSpiceFields();
   renderMarkers();
   renderList();
 }
@@ -767,6 +885,8 @@ async function releaseMarkerOwnership(marker) {
 }
 
 function startPlacing() {
+  if (capturingSpice) setSpiceCaptureMode(false);
+
   if (!isAdmin && !isDeepMap() && ownedBaseCount() >= MEMBER_BASE_LIMIT) {
     modeHint.textContent = `Members can place up to ${MEMBER_BASE_LIMIT} bases on this map. Delete one first to place another.`;
     updateBaseLimitHint();
@@ -804,10 +924,13 @@ function cancelPlacement() {
   placing = false;
   movingMarkerId = null;
   selectedMarkerId = null;
+  if (capturingSpice) capturingSpice = false;
   map.classList.remove("placing");
   placeButton.textContent = "Place marker";
   cancelButton.classList.add("hidden");
+  if (spiceCaptureButton) spiceCaptureButton.textContent = "Capture spice coordinates";
   modeHint.textContent = "Pan and zoom the map. Choose Place marker, then click the location.";
+  render();
 }
 
 function focusMarker(marker) {
@@ -845,6 +968,9 @@ async function switchMap(nextMapId) {
   if (!MAPS[nextMapId] || activeMapId === nextMapId) return;
   activeMapId = nextMapId;
   updateMapUrl(nextMapId);
+  currentSpiceFields = currentSpiceFieldData();
+  capturedSpiceFields = [];
+  capturingSpice = false;
   placing = false;
   movingMarkerId = null;
   selectedMarkerId = null;
@@ -852,6 +978,7 @@ async function switchMap(nextMapId) {
   tileLayer.replaceChildren();
   map.classList.remove("placing");
   placeButton.textContent = "Place marker";
+  if (spiceCaptureButton) spiceCaptureButton.textContent = "Capture spice coordinates";
   cancelButton.classList.add("hidden");
   modeHint.textContent = "";
   centerMap();
@@ -888,6 +1015,26 @@ deepGuildBaseInput.addEventListener("change", () => {
   }
   render();
 });
+deepSpiceToggle.addEventListener("change", render);
+spiceCaptureButton.addEventListener("click", () => {
+  if (!isAdmin || !isDeepMap()) return;
+  setSpiceCaptureMode(!capturingSpice);
+});
+spiceUndoButton.addEventListener("click", () => {
+  capturedSpiceFields.pop();
+  updateSpiceCaptureOutput();
+  render();
+});
+spiceCopyButton.addEventListener("click", async () => {
+  const text = spiceCaptureJson();
+  try {
+    await navigator.clipboard.writeText(text);
+    spiceCaptureHint.textContent = "Copied. Paste this under bySignature in deep-spice-fields.json.";
+  } catch {
+    spiceCaptureOutput.select();
+    spiceCaptureHint.textContent = "Copy the selected JSON from the box below.";
+  }
+});
 mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
 zoomSlider.addEventListener("input", zoomFromSlider);
 
@@ -907,7 +1054,7 @@ editForm.addEventListener("submit", async (event) => {
 });
 
 map.addEventListener("pointerdown", (event) => {
-  if (placing || event.target.closest(".map-tabs, .zoom-control")) return;
+  if (placing || capturingSpice || event.target.closest(".map-tabs, .zoom-control")) return;
   isDragging = true;
   dragStart = {
     pointerId: event.pointerId,
@@ -937,7 +1084,21 @@ map.addEventListener("pointerup", (event) => {
 });
 
 map.addEventListener("click", (event) => {
-  if (!placing || event.target.closest(".map-tabs, .zoom-control")) return;
+  if (event.target.closest(".map-tabs, .zoom-control")) return;
+
+  if (capturingSpice) {
+    const point = mapPointFromEvent(event);
+    capturedSpiceFields.push({
+      ...point,
+      label: `Large Spice Field ${capturedSpiceFields.length + 1}`,
+    });
+    deepSpiceToggle.checked = true;
+    updateSpiceCaptureOutput();
+    render();
+    return;
+  }
+
+  if (!placing) return;
   const marker = markers.find((item) => item.id === movingMarkerId);
   if (marker) {
     selectedMarkerId = null;
@@ -1052,6 +1213,8 @@ async function boot() {
   } catch {
     modeHint.textContent = "Using bundled map tiles. Weekly Deep Desert tiles may need a refresh later.";
   }
+  await loadSpiceFieldData();
+  currentSpiceFields = currentSpiceFieldData();
 
   centerMap();
 
