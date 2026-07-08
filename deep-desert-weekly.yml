@@ -1,0 +1,50 @@
+name: Deep Desert weekly update
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "30 10 * * 2"
+    - cron: "30 11 * * 2"
+
+permissions:
+  contents: write
+
+jobs:
+  update-deep-desert:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install browser tools
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install playwright
+          python -m playwright install --with-deps chromium
+
+      - name: Reset Supabase Deep Desert markers if the map changed
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: python tools/reset_deep_desert_supabase.py
+
+      - name: Sync Method Deep Desert overlays
+        run: python tools/sync_method_spice_fields.py
+
+      - name: Commit updated overlay data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git diff --quiet -- public/deep-spice-fields.json; then
+            echo "No overlay data changes to commit."
+          else
+            git add public/deep-spice-fields.json
+            git commit -m "Update Deep Desert weekly overlays"
+            git push
+          fi

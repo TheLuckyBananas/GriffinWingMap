@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import argparse
+import asyncio
 import html
 import json
 import re
@@ -72,6 +73,23 @@ def request_text(url: str) -> str:
     request = urllib.request.Request(url, headers={"User-Agent": "GriffinWingMap/1.0"})
     with urllib.request.urlopen(request, timeout=30, context=SSL_CONTEXT) as response:
         return response.read().decode("utf-8", errors="replace")
+
+
+async def rendered_method_html(url: str) -> str:
+    try:
+        from playwright.async_api import async_playwright
+    except ImportError:
+        return ""
+
+    async with async_playwright() as playwright:
+        browser = await playwright.chromium.launch()
+        page = await browser.new_page()
+        try:
+            await page.goto(url, wait_until="domcontentloaded", timeout=60000)
+            await page.wait_for_selector("[data-poitype]", timeout=30000)
+            return await page.content()
+        finally:
+            await browser.close()
 
 
 def read_app_tile_url(root: Path) -> str:
@@ -217,6 +235,16 @@ def main() -> int:
         kind: overlay_fields_from_method(source, kind, config["method"])
         for kind, config in OVERLAY_TYPES.items()
     }
+
+    if not any(fields_by_kind.values()):
+        print("No overlay fields found in static HTML. Trying rendered page...")
+        rendered_source = asyncio.run(rendered_method_html(args.method_url))
+        if rendered_source:
+            fields_by_kind = {
+                kind: overlay_fields_from_method(rendered_source, kind, config["method"])
+                for kind, config in OVERLAY_TYPES.items()
+            }
+
     if not any(fields_by_kind.values()):
         print("No Method overlay fields found.", file=sys.stderr)
         return 2
