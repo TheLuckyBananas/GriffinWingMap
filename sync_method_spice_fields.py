@@ -135,22 +135,36 @@ def method_week_label(source: str) -> str:
     return " ".join(match.group(1).split()) if match else ""
 
 
+def html_attrs(tag: str) -> dict[str, str]:
+    return {
+        name.lower(): html.unescape(value)
+        for name, value in re.findall(r'([:\w-]+)\s*=\s*"([^"]*)"', tag)
+    }
+
+
 def overlay_fields_from_method(source: str, kind: str, method_type: str) -> list[OverlayField]:
     normalized = normalize_method_html(source)
-    pattern = re.compile(
-        r'data-main-cell="(?P<cell>[A-I]:[1-9])"(?:(?!data-main-cell).)*?'
-        r'data-subx="(?P<subx>[1-4])"(?:(?!data-main-cell).)*?'
-        r'data-suby="(?P<suby>[0-3])"(?:(?!data-main-cell).)*?'
-        rf'data-poitype="{re.escape(method_type)}"',
-        re.I | re.S,
-    )
-
     fields: list[OverlayField] = []
     seen: set[tuple[str, str, str]] = set()
-    for match in pattern.finditer(normalized):
-        cell = match.group("cell").upper()
-        subx = match.group("subx")
-        suby = match.group("suby")
+
+    current_cell = ""
+    tag_pattern = re.compile(r"<[^>]+>", re.S)
+    for match in tag_pattern.finditer(normalized):
+        tag = match.group(0)
+        attrs = html_attrs(tag)
+
+        if attrs.get("data-main-cell"):
+            current_cell = attrs["data-main-cell"].upper()
+
+        if attrs.get("data-poitype") != method_type:
+            continue
+
+        cell = attrs.get("data-main-cell", current_cell).upper()
+        subx = attrs.get("data-subx", "")
+        suby = attrs.get("data-suby", "")
+        if not re.fullmatch(r"[A-I]:[1-9]", cell) or subx not in SUBCELL_X_CENTER or suby not in SUBCELL_Y_CENTER:
+            continue
+
         key = (cell, subx, suby)
         if key in seen:
             continue
