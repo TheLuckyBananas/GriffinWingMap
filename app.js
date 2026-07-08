@@ -30,6 +30,7 @@ const tileLayer = document.querySelector("#tileLayer");
 const gridLayer = document.querySelector("#gridLayer");
 const spiceLayer = document.querySelector("#spiceLayer");
 const markerLayer = document.querySelector("#markerLayer");
+const deepResourceLegend = document.querySelector("#deepResourceLegend");
 const pageTitle = document.querySelector("#pageTitle");
 const zoomSlider = document.querySelector("#zoomSlider");
 const playerNameInput = document.querySelector("#playerName");
@@ -37,14 +38,6 @@ const seitchNameInput = document.querySelector("#seitchName");
 const seitchField = document.querySelector("#seitchField");
 const deepTypeField = document.querySelector("#deepTypeField");
 const deepMarkerTypeInput = document.querySelector("#deepMarkerType");
-const deepSpiceField = document.querySelector("#deepSpiceField");
-const deepSpiceToggle = document.querySelector("#deepSpiceToggle");
-const deepTitaniumField = document.querySelector("#deepTitaniumField");
-const deepTitaniumToggle = document.querySelector("#deepTitaniumToggle");
-const deepStravidiumField = document.querySelector("#deepStravidiumField");
-const deepStravidiumToggle = document.querySelector("#deepStravidiumToggle");
-const deepTestingStationField = document.querySelector("#deepTestingStationField");
-const deepTestingStationToggle = document.querySelector("#deepTestingStationToggle");
 const deepZoneField = document.querySelector("#deepZoneField");
 const deepPvpZoneInput = document.querySelector("#deepPvpZone");
 const deepGuildField = document.querySelector("#deepGuildField");
@@ -91,30 +84,27 @@ const DEEP_OVERLAY_TYPES = {
   spice: {
     label: "Large Spice Field",
     itemLabel: "Large Spice Field",
-    field: deepSpiceField,
-    toggle: deepSpiceToggle,
     className: "spice",
   },
   titanium: {
     label: "Titanium",
     itemLabel: "Titanium",
-    field: deepTitaniumField,
-    toggle: deepTitaniumToggle,
     className: "titanium",
   },
   stravidium: {
     label: "Stravidium",
     itemLabel: "Stravidium",
-    field: deepStravidiumField,
-    toggle: deepStravidiumToggle,
     className: "stravidium",
   },
   testingStation: {
     label: "Testing Stations",
     itemLabel: "Testing Station",
-    field: deepTestingStationField,
-    toggle: deepTestingStationToggle,
     className: "testing-station",
+  },
+  cave: {
+    label: "Cave",
+    itemLabel: "Cave",
+    className: "cave",
   },
 };
 
@@ -171,6 +161,7 @@ function emptyDeepOverlays() {
     titanium: [],
     stravidium: [],
     testingStation: [],
+    cave: [],
   };
 }
 
@@ -186,6 +177,7 @@ function normalizeDeepOverlayData(value) {
   overlays.titanium = Array.isArray(value.titanium) ? value.titanium : [];
   overlays.stravidium = Array.isArray(value.stravidium) ? value.stravidium : [];
   overlays.testingStation = Array.isArray(value.testingStation) ? value.testingStation : Array.isArray(value.testingStations) ? value.testingStations : [];
+  overlays.cave = Array.isArray(value.cave) ? value.cave : Array.isArray(value.caves) ? value.caves : [];
   return overlays;
 }
 
@@ -371,15 +363,14 @@ function sectorName(column, row) {
 
 function renderSpiceFields() {
   spiceLayer.replaceChildren();
-  const visible = isDeepMap() && Object.entries(DEEP_OVERLAY_TYPES).some(([type, config]) => {
-    return config.toggle?.checked && currentDeepOverlays[type]?.length > 0;
+  const visible = isDeepMap() && Object.keys(DEEP_OVERLAY_TYPES).some((type) => {
+    return currentDeepOverlays[type]?.length > 0;
   });
   spiceLayer.classList.toggle("hidden", !visible);
   if (!visible) return;
 
   const size = worldSize();
   for (const [type, config] of Object.entries(DEEP_OVERLAY_TYPES)) {
-    if (!config.toggle?.checked) continue;
     const fields = currentDeepOverlays[type] || [];
     for (const field of fields) {
       const fieldWrap = document.createElement("div");
@@ -604,10 +595,7 @@ function renderControls() {
   const deepBaseMode = isDeepMap() && deepMarkerTypeInput.value === "base";
   playerNameInput.closest(".field").classList.toggle("hidden", enemyMode);
   seitchField.classList.toggle("hidden", isDeepMap());
-  for (const [type, config] of Object.entries(DEEP_OVERLAY_TYPES)) {
-    config.field?.classList.toggle("hidden", !isDeepMap());
-    if (config.toggle) config.toggle.disabled = (currentDeepOverlays[type] || []).length === 0;
-  }
+  deepResourceLegend?.classList.toggle("hidden", !isDeepMap());
   deepTypeField.classList.toggle("hidden", !isDeepMap());
   deepZoneField.classList.toggle("hidden", !deepBaseMode);
   deepGuildField.classList.toggle("hidden", !deepBaseMode);
@@ -968,9 +956,6 @@ function zoomFromSlider() {
 }
 
 function setDeepOverlayDefaults() {
-  for (const [type, config] of Object.entries(DEEP_OVERLAY_TYPES)) {
-    if (config.toggle) config.toggle.checked = (currentDeepOverlays[type] || []).length > 0;
-  }
 }
 
 async function switchMap(nextMapId) {
@@ -1022,7 +1007,6 @@ deepGuildBaseInput.addEventListener("change", () => {
   }
   render();
 });
-Object.values(DEEP_OVERLAY_TYPES).forEach((config) => config.toggle?.addEventListener("change", render));
 mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
 zoomSlider.addEventListener("input", zoomFromSlider);
 
@@ -1042,7 +1026,7 @@ editForm.addEventListener("submit", async (event) => {
 });
 
 map.addEventListener("pointerdown", (event) => {
-  if (placing || event.target.closest(".map-tabs, .zoom-control")) return;
+  if (placing || event.target.closest(".map-tabs, .zoom-control, .resource-legend")) return;
   isDragging = true;
   dragStart = {
     pointerId: event.pointerId,
@@ -1072,7 +1056,7 @@ map.addEventListener("pointerup", (event) => {
 });
 
 map.addEventListener("click", (event) => {
-  if (event.target.closest(".map-tabs, .zoom-control")) return;
+  if (event.target.closest(".map-tabs, .zoom-control, .resource-legend")) return;
 
   if (!placing) return;
   const marker = markers.find((item) => item.id === movingMarkerId);

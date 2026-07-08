@@ -103,7 +103,8 @@
           "y": 0.958333,
           "label": "Testing Station 11"
         }
-      ]
+      ],
+      "cave": []
     },
     "deepdesert_1-ce84793aea1d9e14e5898d7d10beb670": {
       "spice": [
@@ -208,14 +209,15 @@
           "y": 0.958333,
           "label": "Testing Station 11"
         }
-      ]
+      ],
+      "cave": []
     }
   },
   "default": {
     "spice": [],
     "titanium": [],
     "stravidium": [],
-    "testingStation": []
-  },
-  "description": "Deep Desert overlay data. Coordinates are normalized map positions from 0 to 1."
+    "testingStation": [],
+    "cave": []
+  }
 }

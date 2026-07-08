@@ -219,6 +219,71 @@ h2 {
   accent-color: var(--gold);
 }
 
+.resource-legend {
+  position: absolute;
+  z-index: 5;
+  left: 14px;
+  bottom: 14px;
+  width: min(230px, calc(100% - 170px));
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(8, 8, 6, 0.86);
+  box-shadow: var(--shadow);
+  color: var(--text);
+}
+
+.resource-legend-title {
+  margin-bottom: 7px;
+  color: var(--gold-strong);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.resource-items {
+  display: grid;
+  gap: 6px;
+}
+
+.resource-item {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.1;
+}
+
+.resource-icon {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  background: center / contain no-repeat;
+  filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.62));
+}
+
+.resource-icon.spice {
+  background-image: url("./spice-field.png");
+}
+
+.resource-icon.titanium {
+  background-image: url("./titanium-field.png");
+}
+
+.resource-icon.stravidium {
+  background-image: url("./stravidium-field.png");
+}
+
+.resource-icon.testing-station {
+  background-image: url("./testing-station.png");
+}
+
+.resource-icon.cave {
+  background-image: url("./cave-field.png");
+}
+
 .grid-label.sector {
   width: 32px;
   height: 20px;
@@ -268,6 +333,12 @@ h2 {
   width: 42px;
   height: 42px;
   background-image: url("./testing-station.png");
+}
+
+.spice-field.cave {
+  width: 42px;
+  height: 42px;
+  background-image: url("./cave-field.png");
 }
 
 .spice-field-label {

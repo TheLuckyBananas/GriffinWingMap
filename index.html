@@ -30,6 +30,16 @@
           <div id="gridLayer" class="grid-layer hidden" aria-hidden="true"></div>
           <div id="spiceLayer" class="spice-layer hidden" aria-label="Deep Desert overlay locations"></div>
           <div id="markerLayer" class="marker-layer"></div>
+          <div id="deepResourceLegend" class="resource-legend hidden" aria-label="Deep Desert resources">
+            <div class="resource-legend-title">Resources</div>
+            <div class="resource-items">
+              <span class="resource-item"><span class="resource-icon spice"></span>Large Spice Field</span>
+              <span class="resource-item"><span class="resource-icon titanium"></span>Titanium</span>
+              <span class="resource-item"><span class="resource-icon stravidium"></span>Stravidium</span>
+              <span class="resource-item"><span class="resource-icon testing-station"></span>Testing Station</span>
+              <span class="resource-item"><span class="resource-icon cave"></span>Cave</span>
+            </div>
+          </div>
           <label class="zoom-control" aria-label="Map zoom">
             <span>Zoom</span>
             <input id="zoomSlider" type="range" min="1" max="4" step="1" value="2">
@@ -37,23 +47,6 @@
         </div>
 
         <aside class="side-panel" aria-label="Base marker details">
-          <label id="deepSpiceField" class="checkbox-field hidden">
-            <input id="deepSpiceToggle" type="checkbox">
-            <span>Show large spice fields</span>
-          </label>
-          <label id="deepTitaniumField" class="checkbox-field hidden">
-            <input id="deepTitaniumToggle" type="checkbox">
-            <span>Show titanium</span>
-          </label>
-          <label id="deepStravidiumField" class="checkbox-field hidden">
-            <input id="deepStravidiumToggle" type="checkbox">
-            <span>Show stravidium</span>
-          </label>
-          <label id="deepTestingStationField" class="checkbox-field hidden">
-            <input id="deepTestingStationToggle" type="checkbox">
-            <span>Show testing stations</span>
-          </label>
-
           <label id="deepTypeField" class="field hidden">
             <span>Location type</span>
             <select id="deepMarkerType">
