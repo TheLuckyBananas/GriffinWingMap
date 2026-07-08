@@ -248,8 +248,26 @@ h2 {
   height: 38px;
   transform: translate(-50%, -50%);
   pointer-events: auto;
-  background: url("./spice-field.png") center / contain no-repeat;
+  background: center / contain no-repeat;
   filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.58));
+}
+
+.spice-field.spice {
+  background-image: url("./spice-field.png");
+}
+
+.spice-field.titanium {
+  background-image: url("./titanium-field.png");
+}
+
+.spice-field.stravidium {
+  background-image: url("./stravidium-field.png");
+}
+
+.spice-field.testing-station {
+  width: 42px;
+  height: 42px;
+  background-image: url("./testing-station.png");
 }
 
 .spice-field-label {
@@ -493,30 +511,6 @@ button.danger {
   margin: 12px 0 0;
   color: var(--muted);
   font-size: 0.86rem;
-  line-height: 1.35;
-}
-
-.spice-capture {
-  display: grid;
-  gap: 8px;
-  margin-top: 12px;
-  padding: 10px;
-  border: 1px solid rgba(214, 166, 76, 0.22);
-  border-radius: 8px;
-  background: rgba(214, 166, 76, 0.06);
-}
-
-.spice-capture-tools {
-  display: grid;
-  gap: 6px;
-}
-
-.spice-capture textarea {
-  min-height: 116px;
-  resize: vertical;
-  background: rgba(0, 0, 0, 0.3);
-  font-family: Consolas, "Courier New", monospace;
-  font-size: 0.74rem;
   line-height: 1.35;
 }
 

@@ -1,26 +1,220 @@
 {
   "bySignature": {
-    "deepdesert_1-0d22aa96e0f7e8eb77b2c3a6623dad7c": [
-      {
-        "x": 0.437988,
-        "y": 0.395451,
-        "label": "Large Spice Field 1"
-      },
-      {
-        "x": 0.812598,
-        "y": 0.395939,
-        "label": "Large Spice Field 2"
-      },
-      {
-        "x": 0.771582,
-        "y": 0.103631,
-        "label": "Large Spice Field 3"
-      },
-      {
-        "x": 0.10415,
-        "y": 0.438104,
-        "label": "Large Spice Field 4"
-      }
-    ]
+    "deepdesert_1-0d22aa96e0f7e8eb77b2c3a6623dad7c": {
+      "spice": [
+        {
+          "x": 0.763889,
+          "y": 0.097222,
+          "label": "Large Spice Field 1"
+        },
+        {
+          "x": 0.430556,
+          "y": 0.402778,
+          "label": "Large Spice Field 2"
+        },
+        {
+          "x": 0.819444,
+          "y": 0.402778,
+          "label": "Large Spice Field 3"
+        },
+        {
+          "x": 0.097222,
+          "y": 0.430556,
+          "label": "Large Spice Field 4"
+        }
+      ],
+      "titanium": [
+        {
+          "x": 0.541667,
+          "y": 0.152778,
+          "label": "Titanium 1"
+        },
+        {
+          "x": 0.486111,
+          "y": 0.236111,
+          "label": "Titanium 2"
+        }
+      ],
+      "stravidium": [
+        {
+          "x": 0.486111,
+          "y": 0.152778,
+          "label": "Stravidium 1"
+        },
+        {
+          "x": 0.513889,
+          "y": 0.291667,
+          "label": "Stravidium 2"
+        }
+      ],
+      "testingStation": [
+        {
+          "x": 0.180556,
+          "y": 0.180556,
+          "label": "Testing Station 1"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.180556,
+          "label": "Testing Station 2"
+        },
+        {
+          "x": 0.569444,
+          "y": 0.513889,
+          "label": "Testing Station 3"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.513889,
+          "label": "Testing Station 4"
+        },
+        {
+          "x": 0.236111,
+          "y": 0.569444,
+          "label": "Testing Station 5"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.902778,
+          "label": "Testing Station 6"
+        },
+        {
+          "x": 0.152778,
+          "y": 0.930556,
+          "label": "Testing Station 7"
+        },
+        {
+          "x": 0.430556,
+          "y": 0.930556,
+          "label": "Testing Station 8"
+        },
+        {
+          "x": 0.263889,
+          "y": 0.958333,
+          "label": "Testing Station 9"
+        },
+        {
+          "x": 0.513889,
+          "y": 0.958333,
+          "label": "Testing Station 10"
+        },
+        {
+          "x": 0.902778,
+          "y": 0.958333,
+          "label": "Testing Station 11"
+        }
+      ]
+    },
+    "deepdesert_1-ce84793aea1d9e14e5898d7d10beb670": {
+      "spice": [
+        {
+          "x": 0.763889,
+          "y": 0.097222,
+          "label": "Large Spice Field 1"
+        },
+        {
+          "x": 0.430556,
+          "y": 0.402778,
+          "label": "Large Spice Field 2"
+        },
+        {
+          "x": 0.819444,
+          "y": 0.402778,
+          "label": "Large Spice Field 3"
+        },
+        {
+          "x": 0.097222,
+          "y": 0.430556,
+          "label": "Large Spice Field 4"
+        }
+      ],
+      "titanium": [
+        {
+          "x": 0.541667,
+          "y": 0.152778,
+          "label": "Titanium 1"
+        },
+        {
+          "x": 0.486111,
+          "y": 0.236111,
+          "label": "Titanium 2"
+        }
+      ],
+      "stravidium": [
+        {
+          "x": 0.486111,
+          "y": 0.152778,
+          "label": "Stravidium 1"
+        },
+        {
+          "x": 0.513889,
+          "y": 0.291667,
+          "label": "Stravidium 2"
+        }
+      ],
+      "testingStation": [
+        {
+          "x": 0.180556,
+          "y": 0.180556,
+          "label": "Testing Station 1"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.180556,
+          "label": "Testing Station 2"
+        },
+        {
+          "x": 0.569444,
+          "y": 0.513889,
+          "label": "Testing Station 3"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.513889,
+          "label": "Testing Station 4"
+        },
+        {
+          "x": 0.236111,
+          "y": 0.569444,
+          "label": "Testing Station 5"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.902778,
+          "label": "Testing Station 6"
+        },
+        {
+          "x": 0.152778,
+          "y": 0.930556,
+          "label": "Testing Station 7"
+        },
+        {
+          "x": 0.430556,
+          "y": 0.930556,
+          "label": "Testing Station 8"
+        },
+        {
+          "x": 0.263889,
+          "y": 0.958333,
+          "label": "Testing Station 9"
+        },
+        {
+          "x": 0.513889,
+          "y": 0.958333,
+          "label": "Testing Station 10"
+        },
+        {
+          "x": 0.902778,
+          "y": 0.958333,
+          "label": "Testing Station 11"
+        }
+      ]
+    }
+  },
+  "default": {
+    "spice": [],
+    "titanium": [],
+    "stravidium": [],
+    "testingStation": []
   }
 }

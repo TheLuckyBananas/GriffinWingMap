@@ -8,7 +8,7 @@ const MAPS = {
   deep: {
     id: "deep",
     title: "Deep Desert",
-    tileUrl: "https://cdn.th.gl/dune-awakening/map-tiles/deepdesert_1-ce84793aea1d9e14e5898d7d10beb670/{z}/{y}/{x}.webp?v=1",
+    tileUrl: "https://cdn.th.gl/dune-awakening/map-tiles/deepdesert_1-0d22aa96e0f7e8eb77b2c3a6623dad7c/{z}/{y}/{x}.webp?v=1",
     emptyText: "No Deep Desert locations placed yet.",
   },
 };
@@ -18,9 +18,9 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v22";
+const APP_VERSION = "v23";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
-const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=2";
+const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
 const config = window.GRIFFIN_SUPABASE || {};
 const supabaseClient = window.supabase?.createClient(config.url, config.anonKey);
@@ -39,13 +39,12 @@ const deepTypeField = document.querySelector("#deepTypeField");
 const deepMarkerTypeInput = document.querySelector("#deepMarkerType");
 const deepSpiceField = document.querySelector("#deepSpiceField");
 const deepSpiceToggle = document.querySelector("#deepSpiceToggle");
-const spiceCapturePanel = document.querySelector("#spiceCapturePanel");
-const spiceCaptureButton = document.querySelector("#spiceCaptureButton");
-const spiceCaptureTools = document.querySelector("#spiceCaptureTools");
-const spiceCaptureHint = document.querySelector("#spiceCaptureHint");
-const spiceUndoButton = document.querySelector("#spiceUndoButton");
-const spiceCopyButton = document.querySelector("#spiceCopyButton");
-const spiceCaptureOutput = document.querySelector("#spiceCaptureOutput");
+const deepTitaniumField = document.querySelector("#deepTitaniumField");
+const deepTitaniumToggle = document.querySelector("#deepTitaniumToggle");
+const deepStravidiumField = document.querySelector("#deepStravidiumField");
+const deepStravidiumToggle = document.querySelector("#deepStravidiumToggle");
+const deepTestingStationField = document.querySelector("#deepTestingStationField");
+const deepTestingStationToggle = document.querySelector("#deepTestingStationToggle");
 const deepZoneField = document.querySelector("#deepZoneField");
 const deepPvpZoneInput = document.querySelector("#deepPvpZone");
 const deepGuildField = document.querySelector("#deepGuildField");
@@ -76,9 +75,7 @@ syncStatus.textContent = `Loading app ${APP_VERSION}`;
 
 let markers = [];
 let spiceFieldData = { bySignature: {}, default: [] };
-let currentSpiceFields = [];
-let capturedSpiceFields = [];
-let capturingSpice = false;
+let currentDeepOverlays = emptyDeepOverlays();
 let placing = false;
 let movingMarkerId = null;
 let selectedMarkerId = null;
@@ -89,6 +86,37 @@ let currentUserId = null;
 let editingMarkerId = null;
 let activeMapId = initialMapIdFromUrl();
 let deepDesertSignature = MAPS.deep.tileUrl;
+
+const DEEP_OVERLAY_TYPES = {
+  spice: {
+    label: "Large Spice Field",
+    itemLabel: "Large Spice Field",
+    field: deepSpiceField,
+    toggle: deepSpiceToggle,
+    className: "spice",
+  },
+  titanium: {
+    label: "Titanium",
+    itemLabel: "Titanium",
+    field: deepTitaniumField,
+    toggle: deepTitaniumToggle,
+    className: "titanium",
+  },
+  stravidium: {
+    label: "Stravidium",
+    itemLabel: "Stravidium",
+    field: deepStravidiumField,
+    toggle: deepStravidiumToggle,
+    className: "stravidium",
+  },
+  testingStation: {
+    label: "Testing Stations",
+    itemLabel: "Testing Station",
+    field: deepTestingStationField,
+    toggle: deepTestingStationToggle,
+    className: "testing-station",
+  },
+};
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
 if (savedName) playerNameInput.value = savedName;
@@ -137,13 +165,33 @@ function deepDesertSignatureId() {
   return match?.[1] || deepDesertSignature;
 }
 
-function currentSpiceFieldData() {
-  const signatureId = deepDesertSignatureId();
-  return spiceFieldData.bySignature?.[signatureId] || spiceFieldData.default || [];
+function emptyDeepOverlays() {
+  return {
+    spice: [],
+    titanium: [],
+    stravidium: [],
+    testingStation: [],
+  };
 }
 
-function visibleSpiceFields() {
-  return [...currentSpiceFields, ...capturedSpiceFields];
+function normalizeDeepOverlayData(value) {
+  const overlays = emptyDeepOverlays();
+  if (Array.isArray(value)) {
+    overlays.spice = value;
+    return overlays;
+  }
+  if (!value || typeof value !== "object") return overlays;
+
+  overlays.spice = Array.isArray(value.spice) ? value.spice : Array.isArray(value.largeSpice) ? value.largeSpice : [];
+  overlays.titanium = Array.isArray(value.titanium) ? value.titanium : [];
+  overlays.stravidium = Array.isArray(value.stravidium) ? value.stravidium : [];
+  overlays.testingStation = Array.isArray(value.testingStation) ? value.testingStation : Array.isArray(value.testingStations) ? value.testingStations : [];
+  return overlays;
+}
+
+function currentDeepOverlayData() {
+  const signatureId = deepDesertSignatureId();
+  return normalizeDeepOverlayData(spiceFieldData.bySignature?.[signatureId] || spiceFieldData.default || []);
 }
 
 async function loadSpiceFieldData() {
@@ -155,56 +203,10 @@ async function loadSpiceFieldData() {
       bySignature: data.bySignature || {},
       default: data.default || [],
     };
-    currentSpiceFields = currentSpiceFieldData();
+    currentDeepOverlays = currentDeepOverlayData();
   } catch {
-    currentSpiceFields = [];
+    currentDeepOverlays = emptyDeepOverlays();
   }
-}
-
-function spiceCaptureJson() {
-  const signatureId = deepDesertSignatureId();
-  const fields = capturedSpiceFields.map((field, index) => ({
-    x: Number(field.x.toFixed(6)),
-    y: Number(field.y.toFixed(6)),
-    label: field.label || `Large Spice Field ${index + 1}`,
-  }));
-
-  return JSON.stringify({
-    bySignature: {
-      [signatureId]: fields,
-    },
-  }, null, 2);
-}
-
-function updateSpiceCaptureOutput() {
-  if (!spiceCaptureOutput) return;
-  spiceCaptureOutput.value = spiceCaptureJson();
-  spiceCaptureHint.textContent = capturedSpiceFields.length
-    ? `${capturedSpiceFields.length} spice field${capturedSpiceFields.length === 1 ? "" : "s"} captured. Copy JSON when done.`
-    : "Click each large spice field center on the map.";
-  spiceUndoButton.disabled = capturedSpiceFields.length === 0;
-  spiceCopyButton.disabled = capturedSpiceFields.length === 0;
-}
-
-function setSpiceCaptureMode(enabled) {
-  capturingSpice = Boolean(enabled);
-  if (capturingSpice) {
-    placing = false;
-    movingMarkerId = null;
-    selectedMarkerId = null;
-    map.classList.add("placing");
-    cancelButton.classList.remove("hidden");
-    deepSpiceToggle.checked = true;
-    modeHint.textContent = "Spice capture is active. Click each large spice field center.";
-  } else {
-    map.classList.remove("placing");
-    cancelButton.classList.add("hidden");
-    modeHint.textContent = "";
-  }
-  spiceCaptureButton.textContent = capturingSpice ? "Stop capture" : "Capture spice coordinates";
-  spiceCaptureTools.classList.toggle("hidden", !capturingSpice && capturedSpiceFields.length === 0);
-  updateSpiceCaptureOutput();
-  render();
 }
 
 function formatResetTimestamp(value) {
@@ -369,24 +371,29 @@ function sectorName(column, row) {
 
 function renderSpiceFields() {
   spiceLayer.replaceChildren();
-  const fields = visibleSpiceFields();
-  const visible = isDeepMap() && deepSpiceToggle.checked && fields.length > 0;
+  const visible = isDeepMap() && Object.entries(DEEP_OVERLAY_TYPES).some(([type, config]) => {
+    return config.toggle?.checked && currentDeepOverlays[type]?.length > 0;
+  });
   spiceLayer.classList.toggle("hidden", !visible);
   if (!visible) return;
 
   const size = worldSize();
-  for (const field of fields) {
-    const fieldWrap = document.createElement("div");
-    fieldWrap.className = "spice-field";
-    fieldWrap.style.left = `${view.offsetX + field.x * size}px`;
-    fieldWrap.style.top = `${view.offsetY + field.y * size}px`;
-    fieldWrap.title = field.label || "Large Spice Field";
+  for (const [type, config] of Object.entries(DEEP_OVERLAY_TYPES)) {
+    if (!config.toggle?.checked) continue;
+    const fields = currentDeepOverlays[type] || [];
+    for (const field of fields) {
+      const fieldWrap = document.createElement("div");
+      fieldWrap.className = `spice-field ${config.className}`;
+      fieldWrap.style.left = `${view.offsetX + field.x * size}px`;
+      fieldWrap.style.top = `${view.offsetY + field.y * size}px`;
+      fieldWrap.title = field.label || config.itemLabel;
 
-    const label = document.createElement("span");
-    label.className = "spice-field-label";
-    label.textContent = field.label || "Large Spice Field";
-    fieldWrap.appendChild(label);
-    spiceLayer.appendChild(fieldWrap);
+      const label = document.createElement("span");
+      label.className = "spice-field-label";
+      label.textContent = field.label || config.itemLabel;
+      fieldWrap.appendChild(label);
+      spiceLayer.appendChild(fieldWrap);
+    }
   }
 }
 
@@ -597,10 +604,10 @@ function renderControls() {
   const deepBaseMode = isDeepMap() && deepMarkerTypeInput.value === "base";
   playerNameInput.closest(".field").classList.toggle("hidden", enemyMode);
   seitchField.classList.toggle("hidden", isDeepMap());
-  deepSpiceField.classList.toggle("hidden", !isDeepMap());
-  deepSpiceToggle.disabled = visibleSpiceFields().length === 0 && !isAdmin;
-  spiceCapturePanel.classList.toggle("hidden", !isAdmin || !isDeepMap());
-  spiceCaptureTools.classList.toggle("hidden", !capturingSpice && capturedSpiceFields.length === 0);
+  for (const [type, config] of Object.entries(DEEP_OVERLAY_TYPES)) {
+    config.field?.classList.toggle("hidden", !isDeepMap());
+    if (config.toggle) config.toggle.disabled = (currentDeepOverlays[type] || []).length === 0;
+  }
   deepTypeField.classList.toggle("hidden", !isDeepMap());
   deepZoneField.classList.toggle("hidden", !deepBaseMode);
   deepGuildField.classList.toggle("hidden", !deepBaseMode);
@@ -885,8 +892,6 @@ async function releaseMarkerOwnership(marker) {
 }
 
 function startPlacing() {
-  if (capturingSpice) setSpiceCaptureMode(false);
-
   if (!isAdmin && !isDeepMap() && ownedBaseCount() >= MEMBER_BASE_LIMIT) {
     modeHint.textContent = `Members can place up to ${MEMBER_BASE_LIMIT} bases on this map. Delete one first to place another.`;
     updateBaseLimitHint();
@@ -924,11 +929,9 @@ function cancelPlacement() {
   placing = false;
   movingMarkerId = null;
   selectedMarkerId = null;
-  if (capturingSpice) capturingSpice = false;
   map.classList.remove("placing");
   placeButton.textContent = "Place marker";
   cancelButton.classList.add("hidden");
-  if (spiceCaptureButton) spiceCaptureButton.textContent = "Capture spice coordinates";
   modeHint.textContent = "Pan and zoom the map. Choose Place marker, then click the location.";
   render();
 }
@@ -964,13 +967,18 @@ function zoomFromSlider() {
   changeZoom(Number(zoomSlider.value) - view.zoom, rect.left + rect.width / 2, rect.top + rect.height / 2);
 }
 
+function setDeepOverlayDefaults() {
+  for (const [type, config] of Object.entries(DEEP_OVERLAY_TYPES)) {
+    if (config.toggle) config.toggle.checked = (currentDeepOverlays[type] || []).length > 0;
+  }
+}
+
 async function switchMap(nextMapId) {
   if (!MAPS[nextMapId] || activeMapId === nextMapId) return;
   activeMapId = nextMapId;
   updateMapUrl(nextMapId);
-  currentSpiceFields = currentSpiceFieldData();
-  capturedSpiceFields = [];
-  capturingSpice = false;
+  currentDeepOverlays = currentDeepOverlayData();
+  if (activeMapId === "deep") setDeepOverlayDefaults();
   placing = false;
   movingMarkerId = null;
   selectedMarkerId = null;
@@ -978,7 +986,6 @@ async function switchMap(nextMapId) {
   tileLayer.replaceChildren();
   map.classList.remove("placing");
   placeButton.textContent = "Place marker";
-  if (spiceCaptureButton) spiceCaptureButton.textContent = "Capture spice coordinates";
   cancelButton.classList.add("hidden");
   modeHint.textContent = "";
   centerMap();
@@ -1015,26 +1022,7 @@ deepGuildBaseInput.addEventListener("change", () => {
   }
   render();
 });
-deepSpiceToggle.addEventListener("change", render);
-spiceCaptureButton.addEventListener("click", () => {
-  if (!isAdmin || !isDeepMap()) return;
-  setSpiceCaptureMode(!capturingSpice);
-});
-spiceUndoButton.addEventListener("click", () => {
-  capturedSpiceFields.pop();
-  updateSpiceCaptureOutput();
-  render();
-});
-spiceCopyButton.addEventListener("click", async () => {
-  const text = spiceCaptureJson();
-  try {
-    await navigator.clipboard.writeText(text);
-    spiceCaptureHint.textContent = "Copied. Paste this under bySignature in deep-spice-fields.json.";
-  } catch {
-    spiceCaptureOutput.select();
-    spiceCaptureHint.textContent = "Copy the selected JSON from the box below.";
-  }
-});
+Object.values(DEEP_OVERLAY_TYPES).forEach((config) => config.toggle?.addEventListener("change", render));
 mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
 zoomSlider.addEventListener("input", zoomFromSlider);
 
@@ -1054,7 +1042,7 @@ editForm.addEventListener("submit", async (event) => {
 });
 
 map.addEventListener("pointerdown", (event) => {
-  if (placing || capturingSpice || event.target.closest(".map-tabs, .zoom-control")) return;
+  if (placing || event.target.closest(".map-tabs, .zoom-control")) return;
   isDragging = true;
   dragStart = {
     pointerId: event.pointerId,
@@ -1085,18 +1073,6 @@ map.addEventListener("pointerup", (event) => {
 
 map.addEventListener("click", (event) => {
   if (event.target.closest(".map-tabs, .zoom-control")) return;
-
-  if (capturingSpice) {
-    const point = mapPointFromEvent(event);
-    capturedSpiceFields.push({
-      ...point,
-      label: `Large Spice Field ${capturedSpiceFields.length + 1}`,
-    });
-    deepSpiceToggle.checked = true;
-    updateSpiceCaptureOutput();
-    render();
-    return;
-  }
 
   if (!placing) return;
   const marker = markers.find((item) => item.id === movingMarkerId);
@@ -1214,7 +1190,8 @@ async function boot() {
     modeHint.textContent = "Using bundled map tiles. Weekly Deep Desert tiles may need a refresh later.";
   }
   await loadSpiceFieldData();
-  currentSpiceFields = currentSpiceFieldData();
+  currentDeepOverlays = currentDeepOverlayData();
+  if (activeMapId === "deep") setDeepOverlayDefaults();
 
   centerMap();
 
