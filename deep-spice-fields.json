@@ -216,5 +216,6 @@
     "titanium": [],
     "stravidium": [],
     "testingStation": []
-  }
+  },
+  "description": "Deep Desert overlay data. Coordinates are normalized map positions from 0 to 1."
 }
