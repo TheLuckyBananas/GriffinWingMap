@@ -248,12 +248,26 @@ h2 {
 }
 
 .resource-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) auto;
   align-items: center;
   gap: 7px;
   color: var(--muted);
   font-size: 0.78rem;
   line-height: 1.1;
+  cursor: pointer;
+}
+
+.resource-item span:nth-child(2) {
+  min-width: 0;
+}
+
+.resource-toggle {
+  justify-self: end;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  accent-color: var(--gold);
 }
 
 .resource-icon {

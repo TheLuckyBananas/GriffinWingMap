@@ -31,6 +31,7 @@ const gridLayer = document.querySelector("#gridLayer");
 const spiceLayer = document.querySelector("#spiceLayer");
 const markerLayer = document.querySelector("#markerLayer");
 const deepResourceLegend = document.querySelector("#deepResourceLegend");
+const resourceToggles = [...document.querySelectorAll(".resource-toggle")];
 const pageTitle = document.querySelector("#pageTitle");
 const zoomSlider = document.querySelector("#zoomSlider");
 const playerNameInput = document.querySelector("#playerName");
@@ -364,13 +365,14 @@ function sectorName(column, row) {
 function renderSpiceFields() {
   spiceLayer.replaceChildren();
   const visible = isDeepMap() && Object.keys(DEEP_OVERLAY_TYPES).some((type) => {
-    return currentDeepOverlays[type]?.length > 0;
+    return resourceEnabled(type) && currentDeepOverlays[type]?.length > 0;
   });
   spiceLayer.classList.toggle("hidden", !visible);
   if (!visible) return;
 
   const size = worldSize();
   for (const [type, config] of Object.entries(DEEP_OVERLAY_TYPES)) {
+    if (!resourceEnabled(type)) continue;
     const fields = currentDeepOverlays[type] || [];
     for (const field of fields) {
       const fieldWrap = document.createElement("div");
@@ -386,6 +388,11 @@ function renderSpiceFields() {
       spiceLayer.appendChild(fieldWrap);
     }
   }
+}
+
+function resourceEnabled(type) {
+  const toggle = resourceToggles.find((item) => item.dataset.resourceType === type);
+  return !toggle || toggle.checked;
 }
 
 function renderMarkers() {
@@ -1008,6 +1015,7 @@ deepGuildBaseInput.addEventListener("change", () => {
   render();
 });
 mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
+resourceToggles.forEach((toggle) => toggle.addEventListener("change", render));
 zoomSlider.addEventListener("input", zoomFromSlider);
 
 editForm.addEventListener("submit", async (event) => {
