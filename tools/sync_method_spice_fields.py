@@ -75,11 +75,11 @@ def request_text(url: str) -> str:
         return response.read().decode("utf-8", errors="replace")
 
 
-async def rendered_method_html(url: str) -> str:
+async def rendered_method_fields(url: str) -> dict[str, list[OverlayField]]:
     try:
         from playwright.async_api import async_playwright
     except ImportError:
-        return ""
+        return {}
 
     async with async_playwright() as playwright:
         browser = await playwright.chromium.launch()
@@ -87,9 +87,59 @@ async def rendered_method_html(url: str) -> str:
         try:
             await page.goto(url, wait_until="domcontentloaded", timeout=60000)
             await page.wait_for_selector("[data-poitype]", timeout=30000)
-            return await page.content()
+            rows = await page.evaluate(
+                """() => {
+                    const typeMap = {
+                        "large-spice-field": "spice",
+                        "titanium": "titanium",
+                        "stravidium": "stravidium",
+                        "testing-station": "testingStation",
+                    };
+                    return Array.from(document.querySelectorAll("[data-poitype]"))
+                        .map((element) => {
+                            const methodType = element.getAttribute("data-poitype");
+                            const kind = typeMap[methodType];
+                            if (!kind) return null;
+                            const cell = element.closest("[data-main-cell]")?.getAttribute("data-main-cell") || element.getAttribute("data-main-cell") || "";
+                            return {
+                                kind,
+                                cell,
+                                subx: element.getAttribute("data-subx") || "",
+                                suby: element.getAttribute("data-suby") || "",
+                            };
+                        })
+                        .filter(Boolean);
+                }"""
+            )
         finally:
             await browser.close()
+
+    fields_by_kind: dict[str, list[OverlayField]] = {kind: [] for kind in OVERLAY_TYPES}
+    seen: set[tuple[str, str, str, str]] = set()
+    for row in rows:
+        kind = str(row.get("kind", ""))
+        cell = str(row.get("cell", "")).upper()
+        subx = str(row.get("subx", ""))
+        suby = str(row.get("suby", ""))
+        if kind not in fields_by_kind:
+            continue
+        if not re.fullmatch(r"[A-I]:[1-9]", cell) or subx not in SUBCELL_X_CENTER or suby not in SUBCELL_Y_CENTER:
+            continue
+        key = (kind, cell, subx, suby)
+        if key in seen:
+            continue
+        seen.add(key)
+
+        letter, column_text = cell.split(":")
+        column_index = int(column_text) - 1
+        row_index = 8 - LETTERS_BOTTOM_TO_TOP.index(letter)
+        x = (column_index + SUBCELL_X_CENTER[subx]) / 9
+        y = (row_index + SUBCELL_Y_CENTER[suby]) / 9
+        fields_by_kind[kind].append(OverlayField(kind=kind, cell=cell, subx=subx, suby=suby, x=x, y=y))
+
+    for fields in fields_by_kind.values():
+        fields.sort(key=lambda item: (item.y, item.x))
+    return fields_by_kind
 
 
 def read_app_tile_url(root: Path) -> str:
@@ -252,12 +302,7 @@ def main() -> int:
 
     if not any(fields_by_kind.values()):
         print("No overlay fields found in static HTML. Trying rendered page...")
-        rendered_source = asyncio.run(rendered_method_html(args.method_url))
-        if rendered_source:
-            fields_by_kind = {
-                kind: overlay_fields_from_method(rendered_source, kind, config["method"])
-                for kind, config in OVERLAY_TYPES.items()
-            }
+        fields_by_kind = asyncio.run(rendered_method_fields(args.method_url))
 
     if not any(fields_by_kind.values()):
         print("No Method overlay fields found.", file=sys.stderr)
