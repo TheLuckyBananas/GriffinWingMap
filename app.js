@@ -20,7 +20,7 @@ const MAX_ZOOM = INITIAL_ZOOM + 2;
 const ZOOM_STEPS_PER_LEVEL = 3;
 const ZOOM_STEP = 1 / ZOOM_STEPS_PER_LEVEL;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v32";
+const APP_VERSION = "v33";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -1131,6 +1131,8 @@ editForm.addEventListener("submit", async (event) => {
 map.addEventListener("pointerdown", (event) => {
   if (placing || event.target.closest(".map-tabs, .zoom-control, .resource-legend")) return;
   if (event.button !== 0) return;
+  event.preventDefault();
+  window.getSelection?.().removeAllRanges();
   isDragging = true;
   dragStart = {
     pointerId: event.pointerId,
@@ -1146,6 +1148,7 @@ map.addEventListener("pointerdown", (event) => {
 map.addEventListener("pointermove", (event) => {
   updateResourceHover(event);
   if (!isDragging || !dragStart) return;
+  event.preventDefault();
   if (event.pointerType === "mouse" && event.buttons === 0) {
     endDrag(event.pointerId);
     return;
@@ -1318,5 +1321,6 @@ boot().catch((error) => {
   modeHint.textContent = error.message || "The map loaded, but Supabase is not reachable.";
   centerMap();
 });
+
 
 

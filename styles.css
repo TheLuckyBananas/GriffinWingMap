@@ -109,6 +109,8 @@ h2 {
   touch-action: none;
   cursor: grab;
   background: #050505;
+  user-select: none;
+  -webkit-user-select: none;
 }
 
 .map-tabs {
@@ -800,5 +802,6 @@ button.danger {
     border-top: 1px solid var(--line);
   }
 }
+
 
 
