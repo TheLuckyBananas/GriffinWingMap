@@ -391,7 +391,7 @@ function renderSpiceFields() {
 }
 
 function resourceEnabled(type) {
-  const toggle = resourceToggles.find((item) => item.dataset.resourceType === type);
+  const toggle = deepResourceLegend?.querySelector(`.resource-toggle[data-resource-type="${type}"]`);
   return !toggle || toggle.checked;
 }
 
@@ -1015,7 +1015,12 @@ deepGuildBaseInput.addEventListener("change", () => {
   render();
 });
 mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
-resourceToggles.forEach((toggle) => toggle.addEventListener("change", render));
+deepResourceLegend?.addEventListener("change", (event) => {
+  if (event.target.closest(".resource-toggle")) render();
+});
+deepResourceLegend?.addEventListener("click", (event) => {
+  if (event.target.closest(".resource-toggle")) event.stopPropagation();
+});
 zoomSlider.addEventListener("input", zoomFromSlider);
 
 editForm.addEventListener("submit", async (event) => {
