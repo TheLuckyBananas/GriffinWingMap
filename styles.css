@@ -234,13 +234,21 @@ h2 {
 }
 
 .resource-legend-title {
-  margin-bottom: 7px;
+  display: grid;
+  grid-template-columns: 24px minmax(0, 1fr) 18px;
+  align-items: center;
+  gap: 7px;
+  margin-bottom: 6px;
   color: var(--gold-strong);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.06em;
-  text-align: center;
   text-transform: uppercase;
+}
+
+.resource-legend-title span {
+  grid-column: 2;
+  text-align: center;
 }
 
 .resource-items {
@@ -266,9 +274,6 @@ h2 {
   white-space: nowrap;
 }
 
-.resource-master-item {
-  margin-bottom: 6px;
-}
 
 .resource-toggle {
   justify-self: end;
@@ -795,4 +800,5 @@ button.danger {
     border-top: 1px solid var(--line);
   }
 }
+
 

@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>Griffin Wing Base Map</title>
-    <link rel="stylesheet" href="./styles.css?v=30">
+    <link rel="stylesheet" href="./styles.css?v=31">
   </head>
   <body>
     <main class="app-shell">
@@ -31,12 +31,10 @@
           <div id="spiceLayer" class="spice-layer hidden" aria-label="Deep Desert overlay locations"></div>
           <div id="markerLayer" class="marker-layer"></div>
           <div id="deepResourceLegend" class="resource-legend hidden" aria-label="Deep Desert resources">
-            <div class="resource-legend-title">Resources</div>
-            <label class="resource-item resource-master-item" aria-label="Toggle all resources">
-              <span></span>
-              <span></span>
-              <input id="resourceToggleAll" class="resource-toggle resource-toggle-all" type="checkbox" checked>
-            </label>
+            <div class="resource-legend-title">
+              <span>Resources</span>
+              <input id="resourceToggleAll" class="resource-toggle resource-toggle-all" type="checkbox" aria-label="Toggle all resources" checked>
+            </div>
             <div class="resource-items">
               <label class="resource-item">
                 <span class="resource-icon spice"></span>
@@ -154,7 +152,8 @@
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="./supabase-config.js?v=4"></script>
-    <script src="./app.js?v=30"></script>
+    <script src="./app.js?v=31"></script>
   </body>
 </html>
+
 
