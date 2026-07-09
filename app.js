@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v27";
+const APP_VERSION = "v28";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -379,13 +379,13 @@ function renderSpiceFields() {
       fieldWrap.className = `spice-field ${config.className}`;
       fieldWrap.style.left = `${view.offsetX + field.x * size}px`;
       fieldWrap.style.top = `${view.offsetY + field.y * size}px`;
-      fieldWrap.title = field.label || config.itemLabel;
+      fieldWrap.title = config.itemLabel;
 
       const label = document.createElement("span");
       label.className = "spice-field-label";
 
       const labelName = document.createElement("strong");
-      labelName.textContent = field.label || config.itemLabel;
+      labelName.textContent = config.itemLabel;
       label.appendChild(labelName);
 
       const sectorLine = document.createElement("small");
