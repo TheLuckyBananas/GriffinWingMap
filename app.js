@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v29";
+const APP_VERSION = "v30";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -32,6 +32,7 @@ const spiceLayer = document.querySelector("#spiceLayer");
 const markerLayer = document.querySelector("#markerLayer");
 const deepResourceLegend = document.querySelector("#deepResourceLegend");
 const resourceToggles = [...document.querySelectorAll(".resource-toggle")];
+const resourceToggleAll = document.querySelector("#resourceToggleAll");
 const pageTitle = document.querySelector("#pageTitle");
 const zoomSlider = document.querySelector("#zoomSlider");
 const playerNameInput = document.querySelector("#playerName");
@@ -405,6 +406,14 @@ function renderSpiceFields() {
 function resourceEnabled(type) {
   const toggle = deepResourceLegend?.querySelector(`.resource-toggle[data-resource-type="${type}"]`);
   return !toggle || toggle.checked;
+}
+
+function syncResourceToggleAll() {
+  if (!resourceToggleAll) return;
+  const resourceTypeToggles = resourceToggles.filter((toggle) => toggle.dataset.resourceType);
+  const checkedCount = resourceTypeToggles.filter((toggle) => toggle.checked).length;
+  resourceToggleAll.checked = checkedCount === resourceTypeToggles.length;
+  resourceToggleAll.indeterminate = checkedCount > 0 && checkedCount < resourceTypeToggles.length;
 }
 
 function clearResourceHover() {
@@ -1056,7 +1065,15 @@ deepGuildBaseInput.addEventListener("change", () => {
 });
 mapTabs.forEach((tab) => tab.addEventListener("click", () => switchMap(tab.dataset.mapId)));
 deepResourceLegend?.addEventListener("change", (event) => {
-  if (event.target.closest(".resource-toggle")) render();
+  const toggle = event.target.closest(".resource-toggle");
+  if (!toggle) return;
+  if (toggle === resourceToggleAll) {
+    resourceToggles.forEach((item) => {
+      if (item.dataset.resourceType) item.checked = resourceToggleAll.checked;
+    });
+  }
+  syncResourceToggleAll();
+  render();
 });
 deepResourceLegend?.addEventListener("click", (event) => {
   if (event.target.closest(".resource-toggle")) event.stopPropagation();

@@ -266,6 +266,10 @@ h2 {
   white-space: nowrap;
 }
 
+.resource-master-item {
+  margin-bottom: 6px;
+}
+
 .resource-toggle {
   justify-self: end;
   align-self: center;
