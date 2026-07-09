@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v26";
+const APP_VERSION = "v27";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -401,6 +401,35 @@ function renderSpiceFields() {
 function resourceEnabled(type) {
   const toggle = deepResourceLegend?.querySelector(`.resource-toggle[data-resource-type="${type}"]`);
   return !toggle || toggle.checked;
+}
+
+function clearResourceHover() {
+  spiceLayer.querySelectorAll(".spice-field.hovered").forEach((item) => item.classList.remove("hovered"));
+}
+
+function updateResourceHover(event) {
+  if (!isDeepMap() || isDragging) {
+    clearResourceHover();
+    return;
+  }
+
+  let closest = null;
+  let closestDistance = Infinity;
+  for (const field of spiceLayer.querySelectorAll(".spice-field")) {
+    const rect = field.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    const distance = Math.hypot(event.clientX - centerX, event.clientY - centerY);
+    const hoverRadius = Math.max(rect.width, rect.height) / 2 + 6;
+    if (distance <= hoverRadius && distance < closestDistance) {
+      closest = field;
+      closestDistance = distance;
+    }
+  }
+
+  for (const field of spiceLayer.querySelectorAll(".spice-field")) {
+    field.classList.toggle("hovered", field === closest);
+  }
 }
 
 function renderMarkers() {
@@ -1061,6 +1090,7 @@ map.addEventListener("pointerdown", (event) => {
 });
 
 map.addEventListener("pointermove", (event) => {
+  updateResourceHover(event);
   if (!isDragging || !dragStart) return;
   view.offsetX = dragStart.offsetX + event.clientX - dragStart.x;
   view.offsetY = dragStart.offsetY + event.clientY - dragStart.y;
@@ -1075,6 +1105,8 @@ map.addEventListener("pointerup", (event) => {
   dragStart = null;
   map.classList.remove("dragging");
 });
+
+map.addEventListener("pointerleave", clearResourceHover);
 
 map.addEventListener("click", (event) => {
   if (event.target.closest(".map-tabs, .zoom-control, .resource-legend")) return;

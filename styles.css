@@ -389,7 +389,8 @@ h2 {
   font-size: 0.72rem;
 }
 
-.spice-field:hover .spice-field-label {
+.spice-field:hover .spice-field-label,
+.spice-field.hovered .spice-field-label {
   opacity: 1;
 }
 
