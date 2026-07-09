@@ -19,8 +19,9 @@ const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const ZOOM_STEPS_PER_LEVEL = 3;
 const ZOOM_STEP = 1 / ZOOM_STEPS_PER_LEVEL;
+const TILE_OVERLAP = 1;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v33";
+const APP_VERSION = "v34";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -323,8 +324,8 @@ function renderTiles() {
         img.src = tileUrl(tileZoom, x, y);
         tileLayer.appendChild(img);
       }
-      img.style.width = `${tileSize}px`;
-      img.style.height = `${tileSize}px`;
+      img.style.width = `${tileSize + TILE_OVERLAP}px`;
+      img.style.height = `${tileSize + TILE_OVERLAP}px`;
       img.style.transform = `translate(${view.offsetX + x * tileSize}px, ${view.offsetY + y * tileSize}px)`;
     }
   }
