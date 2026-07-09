@@ -104,7 +104,18 @@
           "label": "Testing Station 11"
         }
       ],
-      "cave": []
+      "cave": [
+        {
+          "x": 0.277778,
+          "y": 0.833333,
+          "label": "Loot Cave 1"
+        },
+        {
+          "x": 0.722222,
+          "y": 0.722222,
+          "label": "Loot Cave 2"
+        }
+      ]
     },
     "deepdesert_1-ce84793aea1d9e14e5898d7d10beb670": {
       "spice": [
@@ -210,7 +221,18 @@
           "label": "Testing Station 11"
         }
       ],
-      "cave": []
+      "cave": [
+        {
+          "x": 0.277778,
+          "y": 0.833333,
+          "label": "Loot Cave 1"
+        },
+        {
+          "x": 0.722222,
+          "y": 0.722222,
+          "label": "Loot Cave 2"
+        }
+      ]
     }
   },
   "default": {

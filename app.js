@@ -103,8 +103,8 @@ const DEEP_OVERLAY_TYPES = {
     className: "testing-station",
   },
   cave: {
-    label: "Cave",
-    itemLabel: "Cave",
+    label: "Loot Cave",
+    itemLabel: "Loot Cave",
     className: "cave",
   },
 };
