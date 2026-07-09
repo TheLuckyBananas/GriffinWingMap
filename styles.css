@@ -362,18 +362,31 @@ h2 {
 
 .spice-field-label {
   position: absolute;
+  display: grid;
+  gap: 2px;
   left: 50%;
   top: 100%;
   transform: translateX(-50%);
   opacity: 0;
-  margin-top: 4px;
-  padding: 3px 6px;
+  margin-top: 6px;
+  padding: 4px 7px;
   border-radius: 6px;
   background: rgba(0, 0, 0, 0.78);
   color: var(--text);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
   white-space: nowrap;
+  pointer-events: none;
+  text-align: center;
   transition: opacity 120ms ease;
+}
+
+.spice-field-label strong {
+  font-size: 0.78rem;
+}
+
+.spice-field-label small {
+  color: var(--muted);
+  font-size: 0.72rem;
 }
 
 .spice-field:hover .spice-field-label {
