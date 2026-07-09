@@ -62,6 +62,10 @@ OVERLAY_TYPES = {
         "method": "testing-station",
         "label": "Testing Station",
     },
+    "cave": {
+        "method": "loot-cave",
+        "label": "Loot Cave",
+    },
 }
 
 
@@ -94,6 +98,7 @@ async def rendered_method_fields(url: str) -> dict[str, list[OverlayField]]:
                         "titanium": "titanium",
                         "stravidium": "stravidium",
                         "testing-station": "testingStation",
+                        "loot-cave": "cave",
                     };
                     return Array.from(document.querySelectorAll("[data-poitype]"))
                         .map((element) => {
@@ -231,6 +236,24 @@ def overlay_fields_from_method(source: str, kind: str, method_type: str) -> list
     return fields
 
 
+def loot_cave_fields_from_loot_tables(source: str) -> list[OverlayField]:
+    fields: list[OverlayField] = []
+    seen: set[str] = set()
+    for letter, column_text in re.findall(r"Loot\s+Cave\s*\(([A-I])\s*([1-9])\)", source, re.I):
+        cell = f"{letter.upper()}:{column_text}"
+        if cell in seen:
+            continue
+        seen.add(cell)
+        column_index = int(column_text) - 1
+        row_index = 8 - LETTERS_BOTTOM_TO_TOP.index(letter.upper())
+        x = (column_index + 0.5) / 9
+        y = (row_index + 0.5) / 9
+        fields.append(OverlayField(kind="cave", cell=cell, subx="center", suby="center", x=x, y=y))
+
+    fields.sort(key=lambda item: (item.y, item.x))
+    return fields
+
+
 def write_overlay_json(path: Path, signature: str, fields_by_kind: dict[str, list[OverlayField]], dry_run: bool) -> None:
     if path.exists():
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -299,10 +322,14 @@ def main() -> int:
         kind: overlay_fields_from_method(source, kind, config["method"])
         for kind, config in OVERLAY_TYPES.items()
     }
+    if not fields_by_kind.get("cave"):
+        fields_by_kind["cave"] = loot_cave_fields_from_loot_tables(source)
 
     if not any(fields_by_kind.values()):
         print("No overlay fields found in static HTML. Trying rendered page...")
         fields_by_kind = asyncio.run(rendered_method_fields(args.method_url))
+        if not fields_by_kind.get("cave"):
+            fields_by_kind["cave"] = loot_cave_fields_from_loot_tables(source)
 
     if not any(fields_by_kind.values()):
         print("No Method overlay fields found.", file=sys.stderr)
