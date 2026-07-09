@@ -17,8 +17,10 @@ const TILE_SIZE = 256;
 const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
+const ZOOM_STEPS_PER_LEVEL = 3;
+const ZOOM_STEP = 1 / ZOOM_STEPS_PER_LEVEL;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v31";
+const APP_VERSION = "v32";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -231,6 +233,19 @@ function worldSize(zoom = view.zoom) {
   return TILE_SIZE * 2 ** zoom;
 }
 
+function normalizeZoom(zoom) {
+  const snapped = Math.round(zoom * ZOOM_STEPS_PER_LEVEL) / ZOOM_STEPS_PER_LEVEL;
+  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, snapped));
+}
+
+function tileZoomForView() {
+  return Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, Math.ceil(view.zoom)));
+}
+
+function displayTileSize(tileZoom = tileZoomForView()) {
+  return TILE_SIZE * 2 ** (view.zoom - tileZoom);
+}
+
 function panBounds() {
   const size = worldSize();
   const rect = map.getBoundingClientRect();
@@ -282,16 +297,18 @@ async function refreshMapTileUrls() {
 
 function renderTiles() {
   const rect = map.getBoundingClientRect();
-  const count = 2 ** view.zoom;
-  const startX = Math.max(0, Math.floor(-view.offsetX / TILE_SIZE));
-  const startY = Math.max(0, Math.floor(-view.offsetY / TILE_SIZE));
-  const endX = Math.min(count - 1, Math.floor((rect.width - view.offsetX) / TILE_SIZE));
-  const endY = Math.min(count - 1, Math.floor((rect.height - view.offsetY) / TILE_SIZE));
+  const tileZoom = tileZoomForView();
+  const tileSize = displayTileSize(tileZoom);
+  const count = 2 ** tileZoom;
+  const startX = Math.max(0, Math.floor(-view.offsetX / tileSize));
+  const startY = Math.max(0, Math.floor(-view.offsetY / tileSize));
+  const endX = Math.min(count - 1, Math.floor((rect.width - view.offsetX) / tileSize));
+  const endY = Math.min(count - 1, Math.floor((rect.height - view.offsetY) / tileSize));
   const wanted = new Set();
 
   for (let x = startX; x <= endX; x += 1) {
     for (let y = startY; y <= endY; y += 1) {
-      const key = `${activeMapId}:${view.zoom}:${x}:${y}`;
+      const key = `${activeMapId}:${tileZoom}:${x}:${y}`;
       wanted.add(key);
       let img = tileLayer.querySelector(`[data-key="${key}"]`);
       if (!img) {
@@ -303,10 +320,12 @@ function renderTiles() {
         img.addEventListener("error", () => {
           modeHint.textContent = "Map tiles did not load. Check internet access or CDN blocking.";
         }, { once: true });
-        img.src = tileUrl(view.zoom, x, y);
+        img.src = tileUrl(tileZoom, x, y);
         tileLayer.appendChild(img);
       }
-      img.style.transform = `translate(${view.offsetX + x * TILE_SIZE}px, ${view.offsetY + y * TILE_SIZE}px)`;
+      img.style.width = `${tileSize}px`;
+      img.style.height = `${tileSize}px`;
+      img.style.transform = `translate(${view.offsetX + x * tileSize}px, ${view.offsetY + y * tileSize}px)`;
     }
   }
 
@@ -990,7 +1009,7 @@ function focusMarker(marker) {
 }
 
 function changeZoom(delta, clientX, clientY) {
-  const nextZoom = Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, view.zoom + delta));
+  const nextZoom = normalizeZoom(view.zoom + delta);
   if (nextZoom === view.zoom) return;
 
   const rect = map.getBoundingClientRect();
@@ -1009,6 +1028,20 @@ function changeZoom(delta, clientX, clientY) {
 function zoomFromSlider() {
   const rect = map.getBoundingClientRect();
   changeZoom(Number(zoomSlider.value) - view.zoom, rect.left + rect.width / 2, rect.top + rect.height / 2);
+}
+
+function endDrag(pointerId = null) {
+  if (pointerId !== null && dragStart?.pointerId !== pointerId) return;
+  if (dragStart && map.hasPointerCapture?.(dragStart.pointerId)) {
+    try {
+      map.releasePointerCapture(dragStart.pointerId);
+    } catch {
+      // Pointer capture can already be gone if the browser ended it first.
+    }
+  }
+  isDragging = false;
+  dragStart = null;
+  map.classList.remove("dragging");
 }
 
 function setDeepOverlayDefaults() {
@@ -1097,6 +1130,7 @@ editForm.addEventListener("submit", async (event) => {
 
 map.addEventListener("pointerdown", (event) => {
   if (placing || event.target.closest(".map-tabs, .zoom-control, .resource-legend")) return;
+  if (event.button !== 0) return;
   isDragging = true;
   dragStart = {
     pointerId: event.pointerId,
@@ -1112,20 +1146,21 @@ map.addEventListener("pointerdown", (event) => {
 map.addEventListener("pointermove", (event) => {
   updateResourceHover(event);
   if (!isDragging || !dragStart) return;
+  if (event.pointerType === "mouse" && event.buttons === 0) {
+    endDrag(event.pointerId);
+    return;
+  }
   view.offsetX = dragStart.offsetX + event.clientX - dragStart.x;
   view.offsetY = dragStart.offsetY + event.clientY - dragStart.y;
   render();
 });
 
 map.addEventListener("pointerup", (event) => {
-  if (isDragging && dragStart?.pointerId === event.pointerId) {
-    map.releasePointerCapture(event.pointerId);
-  }
-  isDragging = false;
-  dragStart = null;
-  map.classList.remove("dragging");
+  endDrag(event.pointerId);
 });
 
+map.addEventListener("pointercancel", (event) => endDrag(event.pointerId));
+map.addEventListener("lostpointercapture", (event) => endDrag(event.pointerId));
 map.addEventListener("pointerleave", clearResourceHover);
 
 map.addEventListener("click", (event) => {
@@ -1142,10 +1177,12 @@ map.addEventListener("click", (event) => {
 
 map.addEventListener("wheel", (event) => {
   event.preventDefault();
-  changeZoom(event.deltaY < 0 ? 1 : -1, event.clientX, event.clientY);
+  changeZoom(event.deltaY < 0 ? ZOOM_STEP : -ZOOM_STEP, event.clientX, event.clientY);
 }, { passive: false });
 
 window.addEventListener("resize", render);
+window.addEventListener("pointerup", (event) => endDrag(event.pointerId));
+window.addEventListener("blur", () => endDrag());
 
 async function ensureAuth() {
   const { data: sessionData } = await supabaseClient.auth.getSession();
