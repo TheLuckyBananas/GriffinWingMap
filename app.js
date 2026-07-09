@@ -21,7 +21,7 @@ const ZOOM_STEPS_PER_LEVEL = 3;
 const ZOOM_STEP = 1 / ZOOM_STEPS_PER_LEVEL;
 const TILE_OVERLAP = 1;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v37";
+const APP_VERSION = "v38";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -37,6 +37,9 @@ const markerLayer = document.querySelector("#markerLayer");
 const deepResourceLegend = document.querySelector("#deepResourceLegend");
 const houseRepLegend = document.querySelector("#houseRepLegend");
 const houseRepToggle = document.querySelector("#houseRepToggle");
+const houseRepToggleRow = document.querySelector("#houseRepToggleRow");
+const tradingPostToggle = document.querySelector("#tradingPostToggle");
+const tradingPostToggleRow = document.querySelector("#tradingPostToggleRow");
 const resourceToggles = [...document.querySelectorAll(".resource-toggle")];
 const resourceToggleAll = document.querySelector("#resourceToggleAll");
 const pageTitle = document.querySelector("#pageTitle");
@@ -139,6 +142,16 @@ const HOUSE_REP_POIS = {
     { id: "landsraad-wayku", house: "Wayku", icon: "house-wayku.png", label: "Wayku Representative", x: 0.130860, y: 0.942865 },
     { id: "landsraad-maros", house: "Maros", icon: "house-maros.png", label: "Maros Representative", x: 0.838720, y: 0.922955 },
   ],
+};
+
+const TRADING_POST_POIS = {
+  hagga: [
+    { id: "trading-pinnacle-station", label: "Pinnacle Station", icon: "trading-post.png", x: 0.523760, y: 0.177258 },
+    { id: "trading-the-crossroads", label: "The Crossroads Tradepost", icon: "trading-post.png", x: 0.296344, y: 0.361748 },
+    { id: "trading-the-anvil", label: "The Anvil", icon: "trading-post.png", x: 0.800596, y: 0.566858 },
+    { id: "trading-griffins-reach", label: "Griffin's Reach Tradepost", icon: "trading-post.png", x: 0.591475, y: 0.843440 },
+  ],
+  deep: [],
 };
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
@@ -453,9 +466,16 @@ function renderSpiceFields() {
 
 function renderHaggaPois() {
   haggaPoiLayer.replaceChildren();
-  const pois = HOUSE_REP_POIS[activeMapId] || [];
-  const legendVisible = pois.length > 0;
-  const visible = legendVisible && houseRepToggle?.checked;
+  const houseReps = HOUSE_REP_POIS[activeMapId] || [];
+  const tradingPosts = TRADING_POST_POIS[activeMapId] || [];
+  const pois = [
+    ...(houseRepToggle?.checked ? houseReps : []),
+    ...(tradingPostToggle?.checked ? tradingPosts : []),
+  ];
+  const legendVisible = houseReps.length > 0 || tradingPosts.length > 0;
+  const visible = legendVisible && pois.length > 0;
+  houseRepToggleRow?.classList.toggle("hidden", houseReps.length === 0);
+  tradingPostToggleRow?.classList.toggle("hidden", tradingPosts.length === 0);
   houseRepLegend?.classList.toggle("hidden", !legendVisible);
   haggaPoiLayer.classList.toggle("hidden", !visible);
   if (!visible) return;
