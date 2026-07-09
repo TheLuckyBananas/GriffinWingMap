@@ -388,10 +388,6 @@ h2 {
   filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.58));
 }
 
-.hagga-poi.landsraad {
-  background-image: url("./landsraad-representative.png");
-}
-
 .spice-field-label,
 .hagga-poi-label {
   position: absolute;

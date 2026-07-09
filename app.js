@@ -21,7 +21,7 @@ const ZOOM_STEPS_PER_LEVEL = 3;
 const ZOOM_STEP = 1 / ZOOM_STEPS_PER_LEVEL;
 const TILE_OVERLAP = 1;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v35";
+const APP_VERSION = "v36";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -115,29 +115,29 @@ const DEEP_OVERLAY_TYPES = {
 };
 
 const HAGGA_POIS = [
-  { id: "landsraad-01", label: "Landsraad Representative", x: 0.430982, y: 0.281257 },
-  { id: "landsraad-02", label: "Landsraad Representative", x: 0.541021, y: 0.537179 },
-  { id: "landsraad-03", label: "Landsraad Representative", x: 0.292689, y: 0.361696 },
-  { id: "landsraad-04", label: "Landsraad Representative", x: 0.229474, y: 0.040013 },
-  { id: "landsraad-05", label: "Landsraad Representative", x: 0.529597, y: 0.566579 },
-  { id: "landsraad-06", label: "Landsraad Representative", x: 0.174115, y: 0.611367 },
-  { id: "landsraad-07", label: "Landsraad Representative", x: 0.173324, y: 0.28064 },
-  { id: "landsraad-08", label: "Landsraad Representative", x: 0.522727, y: 0.177972 },
-  { id: "landsraad-09", label: "Landsraad Representative", x: 0.511381, y: 0.280563 },
-  { id: "landsraad-10", label: "Landsraad Representative", x: 0.499417, y: 0.274547 },
-  { id: "landsraad-11", label: "Landsraad Representative", x: 0.552211, y: 0.553201 },
-  { id: "landsraad-12", label: "Landsraad Representative", x: 0.800798, y: 0.567712 },
-  { id: "landsraad-13", label: "Landsraad Representative", x: 0.588486, y: 0.840959 },
-  { id: "landsraad-14", label: "Landsraad Representative", x: 0.829648, y: 0.214788 },
-  { id: "landsraad-15", label: "Landsraad Representative", x: 0.883183, y: 0.560143 },
-  { id: "landsraad-16", label: "Landsraad Representative", x: 0.90634, y: 0.577034 },
-  { id: "landsraad-17", label: "Landsraad Representative", x: 0.914175, y: 0.408909 },
-  { id: "landsraad-18", label: "Landsraad Representative", x: 0.939665, y: 0.525325 },
-  { id: "landsraad-19", label: "Landsraad Representative", x: 0.957013, y: 0.657494 },
-  { id: "landsraad-20", label: "Landsraad Representative", x: 0.566949, y: 0.574561 },
-  { id: "landsraad-21", label: "Landsraad Representative", x: 0.567154, y: 0.559234 },
-  { id: "landsraad-22", label: "Landsraad Representative", x: 0.68052, y: 0.347137 },
-  { id: "landsraad-23", label: "Landsraad Representative", x: 0.575268, y: 0.577145 },
+  { id: "landsraad-wydras", house: "Wydras", icon: "house-wydras.png", label: "Wydras Representative", x: 0.174374, y: 0.611401 },
+  { id: "landsraad-argosaz", house: "Argosaz", icon: "house-argosaz.png", label: "Argosaz Representative", x: 0.588475, y: 0.840900 },
+  { id: "landsraad-taligari", house: "Taligari", icon: "house-taligari.png", label: "Taligari Representative", x: 0.292754, y: 0.361624 },
+  { id: "landsraad-kenola", house: "Kenola", icon: "house-kenola.png", label: "Kenola Representative", x: 0.173268, y: 0.280697 },
+  { id: "landsraad-tseida", house: "Tseida", icon: "house-tseida.png", label: "Tseida Representative", x: 0.800794, y: 0.567721 },
+  { id: "landsraad-novebruns", house: "Novebruns", icon: "house-novebruns.png", label: "Novebruns Representative", x: 0.541288, y: 0.537580 },
+  { id: "landsraad-hurata", house: "Hurata", icon: "house-hurata.png", label: "Hurata Representative", x: 0.956883, y: 0.657806 },
+  { id: "landsraad-vernius", house: "Vernius", icon: "house-vernius.png", label: "Vernius Representative", x: 0.499421, y: 0.274519 },
+  { id: "landsraad-richese", house: "Richese", icon: "house-richese.png", label: "Richese Representative", x: 0.511368, y: 0.280554 },
+  { id: "landsraad-hagal", house: "Hagal", icon: "house-hagal.png", label: "Hagal Representative", x: 0.431104, y: 0.281392 },
+  { id: "landsraad-lindaren", house: "Lindaren", icon: "house-lindaren.png", label: "Lindaren Representative", x: 0.229511, y: 0.039881 },
+  { id: "landsraad-moritani", house: "Moritani", icon: "house-moritani.png", label: "Moritani Representative", x: 0.906235, y: 0.576957 },
+  { id: "landsraad-dyvetz", house: "Dyvetz", icon: "house-dyvetz.png", label: "Dyvetz Representative", x: 0.883361, y: 0.559865 },
+  { id: "landsraad-ecaz", house: "Ecaz", icon: "house-ecaz.png", label: "Ecaz Representative", x: 0.939660, y: 0.525249 },
+  { id: "landsraad-thorvald", house: "Thorvald", icon: "house-thorvald.png", label: "Thorvald Representative", x: 0.914183, y: 0.409014 },
+  { id: "landsraad-sor", house: "Sor", icon: "house-sor.png", label: "Sor Representative", x: 0.522899, y: 0.178189 },
+  { id: "landsraad-mikarrol", house: "Mikarrol", icon: "house-mikarrol.png", label: "Mikarrol Representative", x: 0.680592, y: 0.347317 },
+  { id: "landsraad-imota", house: "Imota", icon: "house-imota.png", label: "Imota Representative", x: 0.829630, y: 0.214602 },
+  { id: "landsraad-alexin", house: "Alexin", icon: "house-alexin.png", label: "Alexin Representative", x: 0.566949, y: 0.574561 },
+  { id: "landsraad-spinette", house: "Spinette", icon: "house-spinette.png", label: "Spinette Representative", x: 0.575268, y: 0.577145 },
+  { id: "landsraad-varota", house: "Varota", icon: "house-varota.png", label: "Varota Representative", x: 0.552279, y: 0.553165 },
+  { id: "landsraad-mutelli", house: "Mutelli", icon: "house-mutelli.png", label: "Mutelli Representative", x: 0.567448, y: 0.559028 },
+  { id: "landsraad-wallach", house: "Wallach", icon: "house-wallach.png", label: "Wallach Representative", x: 0.529609, y: 0.566516 },
 ];
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
@@ -459,9 +459,10 @@ function renderHaggaPois() {
   const size = worldSize();
   for (const poi of HAGGA_POIS) {
     const poiWrap = document.createElement("div");
-    poiWrap.className = "hagga-poi landsraad";
+    poiWrap.className = "hagga-poi";
     poiWrap.style.left = `${view.offsetX + poi.x * size}px`;
     poiWrap.style.top = `${view.offsetY + poi.y * size}px`;
+    poiWrap.style.backgroundImage = `url("./${poi.icon}")`;
     poiWrap.title = poi.label;
 
     const label = document.createElement("span");
@@ -470,10 +471,6 @@ function renderHaggaPois() {
     const labelName = document.createElement("strong");
     labelName.textContent = poi.label;
     label.appendChild(labelName);
-
-    const sectorLine = document.createElement("small");
-    sectorLine.textContent = "Hagga Basin";
-    label.appendChild(sectorLine);
 
     poiWrap.appendChild(label);
     haggaPoiLayer.appendChild(poiWrap);
