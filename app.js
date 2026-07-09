@@ -1,4 +1,4 @@
-const MAPS = {
+﻿const MAPS = {
   hagga: {
     id: "hagga",
     title: "Hagga Basin",
@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v25";
+const APP_VERSION = "v26";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -1229,3 +1229,4 @@ boot().catch((error) => {
   modeHint.textContent = error.message || "The map loaded, but Supabase is not reachable.";
   centerMap();
 });
+
