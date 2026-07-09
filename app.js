@@ -21,7 +21,7 @@ const ZOOM_STEPS_PER_LEVEL = 3;
 const ZOOM_STEP = 1 / ZOOM_STEPS_PER_LEVEL;
 const TILE_OVERLAP = 1;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v34";
+const APP_VERSION = "v35";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -32,6 +32,7 @@ const map = document.querySelector("#map");
 const tileLayer = document.querySelector("#tileLayer");
 const gridLayer = document.querySelector("#gridLayer");
 const spiceLayer = document.querySelector("#spiceLayer");
+const haggaPoiLayer = document.querySelector("#haggaPoiLayer");
 const markerLayer = document.querySelector("#markerLayer");
 const deepResourceLegend = document.querySelector("#deepResourceLegend");
 const resourceToggles = [...document.querySelectorAll(".resource-toggle")];
@@ -112,6 +113,32 @@ const DEEP_OVERLAY_TYPES = {
     className: "cave",
   },
 };
+
+const HAGGA_POIS = [
+  { id: "landsraad-01", label: "Landsraad Representative", x: 0.430982, y: 0.281257 },
+  { id: "landsraad-02", label: "Landsraad Representative", x: 0.541021, y: 0.537179 },
+  { id: "landsraad-03", label: "Landsraad Representative", x: 0.292689, y: 0.361696 },
+  { id: "landsraad-04", label: "Landsraad Representative", x: 0.229474, y: 0.040013 },
+  { id: "landsraad-05", label: "Landsraad Representative", x: 0.529597, y: 0.566579 },
+  { id: "landsraad-06", label: "Landsraad Representative", x: 0.174115, y: 0.611367 },
+  { id: "landsraad-07", label: "Landsraad Representative", x: 0.173324, y: 0.28064 },
+  { id: "landsraad-08", label: "Landsraad Representative", x: 0.522727, y: 0.177972 },
+  { id: "landsraad-09", label: "Landsraad Representative", x: 0.511381, y: 0.280563 },
+  { id: "landsraad-10", label: "Landsraad Representative", x: 0.499417, y: 0.274547 },
+  { id: "landsraad-11", label: "Landsraad Representative", x: 0.552211, y: 0.553201 },
+  { id: "landsraad-12", label: "Landsraad Representative", x: 0.800798, y: 0.567712 },
+  { id: "landsraad-13", label: "Landsraad Representative", x: 0.588486, y: 0.840959 },
+  { id: "landsraad-14", label: "Landsraad Representative", x: 0.829648, y: 0.214788 },
+  { id: "landsraad-15", label: "Landsraad Representative", x: 0.883183, y: 0.560143 },
+  { id: "landsraad-16", label: "Landsraad Representative", x: 0.90634, y: 0.577034 },
+  { id: "landsraad-17", label: "Landsraad Representative", x: 0.914175, y: 0.408909 },
+  { id: "landsraad-18", label: "Landsraad Representative", x: 0.939665, y: 0.525325 },
+  { id: "landsraad-19", label: "Landsraad Representative", x: 0.957013, y: 0.657494 },
+  { id: "landsraad-20", label: "Landsraad Representative", x: 0.566949, y: 0.574561 },
+  { id: "landsraad-21", label: "Landsraad Representative", x: 0.567154, y: 0.559234 },
+  { id: "landsraad-22", label: "Landsraad Representative", x: 0.68052, y: 0.347137 },
+  { id: "landsraad-23", label: "Landsraad Representative", x: 0.575268, y: 0.577145 },
+];
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
 if (savedName) playerNameInput.value = savedName;
@@ -423,6 +450,36 @@ function renderSpiceFields() {
   }
 }
 
+function renderHaggaPois() {
+  haggaPoiLayer.replaceChildren();
+  const visible = !isDeepMap();
+  haggaPoiLayer.classList.toggle("hidden", !visible);
+  if (!visible) return;
+
+  const size = worldSize();
+  for (const poi of HAGGA_POIS) {
+    const poiWrap = document.createElement("div");
+    poiWrap.className = "hagga-poi landsraad";
+    poiWrap.style.left = `${view.offsetX + poi.x * size}px`;
+    poiWrap.style.top = `${view.offsetY + poi.y * size}px`;
+    poiWrap.title = poi.label;
+
+    const label = document.createElement("span");
+    label.className = "hagga-poi-label";
+
+    const labelName = document.createElement("strong");
+    labelName.textContent = poi.label;
+    label.appendChild(labelName);
+
+    const sectorLine = document.createElement("small");
+    sectorLine.textContent = "Hagga Basin";
+    label.appendChild(sectorLine);
+
+    poiWrap.appendChild(label);
+    haggaPoiLayer.appendChild(poiWrap);
+  }
+}
+
 function resourceEnabled(type) {
   const toggle = deepResourceLegend?.querySelector(`.resource-toggle[data-resource-type="${type}"]`);
   return !toggle || toggle.checked;
@@ -691,6 +748,7 @@ function render() {
   renderTiles();
   renderGrid();
   renderSpiceFields();
+  renderHaggaPois();
   renderMarkers();
   renderList();
 }
