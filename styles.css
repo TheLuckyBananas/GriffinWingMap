@@ -224,7 +224,7 @@ h2 {
   z-index: 5;
   left: 14px;
   bottom: 14px;
-  width: min(230px, calc(100% - 170px));
+  width: min(270px, calc(100% - 170px));
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -249,7 +249,7 @@ h2 {
 
 .resource-item {
   display: grid;
-  grid-template-columns: 24px minmax(0, 1fr) auto;
+  grid-template-columns: 24px minmax(0, 1fr) 18px;
   align-items: center;
   gap: 7px;
   color: var(--muted);
@@ -260,10 +260,14 @@ h2 {
 
 .resource-item span:nth-child(2) {
   min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .resource-toggle {
   justify-self: end;
+  align-self: center;
   width: 15px;
   height: 15px;
   margin: 0;
