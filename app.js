@@ -21,7 +21,7 @@ const ZOOM_STEPS_PER_LEVEL = 3;
 const ZOOM_STEP = 1 / ZOOM_STEPS_PER_LEVEL;
 const TILE_OVERLAP = 1;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v36";
+const APP_VERSION = "v37";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -35,6 +35,8 @@ const spiceLayer = document.querySelector("#spiceLayer");
 const haggaPoiLayer = document.querySelector("#haggaPoiLayer");
 const markerLayer = document.querySelector("#markerLayer");
 const deepResourceLegend = document.querySelector("#deepResourceLegend");
+const houseRepLegend = document.querySelector("#houseRepLegend");
+const houseRepToggle = document.querySelector("#houseRepToggle");
 const resourceToggles = [...document.querySelectorAll(".resource-toggle")];
 const resourceToggleAll = document.querySelector("#resourceToggleAll");
 const pageTitle = document.querySelector("#pageTitle");
@@ -114,7 +116,8 @@ const DEEP_OVERLAY_TYPES = {
   },
 };
 
-const HAGGA_POIS = [
+const HOUSE_REP_POIS = {
+  hagga: [
   { id: "landsraad-wydras", house: "Wydras", icon: "house-wydras.png", label: "Wydras Representative", x: 0.174374, y: 0.611401 },
   { id: "landsraad-argosaz", house: "Argosaz", icon: "house-argosaz.png", label: "Argosaz Representative", x: 0.588475, y: 0.840900 },
   { id: "landsraad-taligari", house: "Taligari", icon: "house-taligari.png", label: "Taligari Representative", x: 0.292754, y: 0.361624 },
@@ -122,8 +125,6 @@ const HAGGA_POIS = [
   { id: "landsraad-tseida", house: "Tseida", icon: "house-tseida.png", label: "Tseida Representative", x: 0.800794, y: 0.567721 },
   { id: "landsraad-novebruns", house: "Novebruns", icon: "house-novebruns.png", label: "Novebruns Representative", x: 0.541288, y: 0.537580 },
   { id: "landsraad-hurata", house: "Hurata", icon: "house-hurata.png", label: "Hurata Representative", x: 0.956883, y: 0.657806 },
-  { id: "landsraad-vernius", house: "Vernius", icon: "house-vernius.png", label: "Vernius Representative", x: 0.499421, y: 0.274519 },
-  { id: "landsraad-richese", house: "Richese", icon: "house-richese.png", label: "Richese Representative", x: 0.511368, y: 0.280554 },
   { id: "landsraad-hagal", house: "Hagal", icon: "house-hagal.png", label: "Hagal Representative", x: 0.431104, y: 0.281392 },
   { id: "landsraad-lindaren", house: "Lindaren", icon: "house-lindaren.png", label: "Lindaren Representative", x: 0.229511, y: 0.039881 },
   { id: "landsraad-moritani", house: "Moritani", icon: "house-moritani.png", label: "Moritani Representative", x: 0.906235, y: 0.576957 },
@@ -133,12 +134,12 @@ const HAGGA_POIS = [
   { id: "landsraad-sor", house: "Sor", icon: "house-sor.png", label: "Sor Representative", x: 0.522899, y: 0.178189 },
   { id: "landsraad-mikarrol", house: "Mikarrol", icon: "house-mikarrol.png", label: "Mikarrol Representative", x: 0.680592, y: 0.347317 },
   { id: "landsraad-imota", house: "Imota", icon: "house-imota.png", label: "Imota Representative", x: 0.829630, y: 0.214602 },
-  { id: "landsraad-alexin", house: "Alexin", icon: "house-alexin.png", label: "Alexin Representative", x: 0.566949, y: 0.574561 },
-  { id: "landsraad-spinette", house: "Spinette", icon: "house-spinette.png", label: "Spinette Representative", x: 0.575268, y: 0.577145 },
-  { id: "landsraad-varota", house: "Varota", icon: "house-varota.png", label: "Varota Representative", x: 0.552279, y: 0.553165 },
-  { id: "landsraad-mutelli", house: "Mutelli", icon: "house-mutelli.png", label: "Mutelli Representative", x: 0.567448, y: 0.559028 },
-  { id: "landsraad-wallach", house: "Wallach", icon: "house-wallach.png", label: "Wallach Representative", x: 0.529609, y: 0.566516 },
-];
+  ],
+  deep: [
+    { id: "landsraad-wayku", house: "Wayku", icon: "house-wayku.png", label: "Wayku Representative", x: 0.130860, y: 0.942865 },
+    { id: "landsraad-maros", house: "Maros", icon: "house-maros.png", label: "Maros Representative", x: 0.838720, y: 0.922955 },
+  ],
+};
 
 const savedName = localStorage.getItem("griffinWingPlayerName");
 if (savedName) playerNameInput.value = savedName;
@@ -452,12 +453,15 @@ function renderSpiceFields() {
 
 function renderHaggaPois() {
   haggaPoiLayer.replaceChildren();
-  const visible = !isDeepMap();
+  const pois = HOUSE_REP_POIS[activeMapId] || [];
+  const legendVisible = pois.length > 0;
+  const visible = legendVisible && houseRepToggle?.checked;
+  houseRepLegend?.classList.toggle("hidden", !legendVisible);
   haggaPoiLayer.classList.toggle("hidden", !visible);
   if (!visible) return;
 
   const size = worldSize();
-  for (const poi of HAGGA_POIS) {
+  for (const poi of pois) {
     const poiWrap = document.createElement("div");
     poiWrap.className = "hagga-poi";
     poiWrap.style.left = `${view.offsetX + poi.x * size}px`;
@@ -732,6 +736,7 @@ function renderControls() {
   markerTypeField.classList.toggle("hidden", !isAdmin || enemyMode);
   baseLimitHint.classList.toggle("hidden", isDeepMap() || enemyMode);
   actionRow.classList.toggle("centered", !isDeepMap());
+  map.classList.toggle("deep-map", isDeepMap());
   mapTabs.forEach((tab) => tab.classList.toggle("active", tab.dataset.mapId === activeMapId));
   map.setAttribute("aria-label", `${activeMap().title} map`);
   pageTitle.textContent = isDeepMap() ? "DD Bases and Enemy Locations" : "Griffin Wing Base Map";
@@ -1165,6 +1170,10 @@ deepResourceLegend?.addEventListener("change", (event) => {
   render();
 });
 deepResourceLegend?.addEventListener("click", (event) => {
+  if (event.target.closest(".resource-toggle")) event.stopPropagation();
+});
+houseRepLegend?.addEventListener("change", render);
+houseRepLegend?.addEventListener("click", (event) => {
   if (event.target.closest(".resource-toggle")) event.stopPropagation();
 });
 zoomSlider.addEventListener("input", zoomFromSlider);

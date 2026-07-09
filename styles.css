@@ -254,6 +254,22 @@ h2 {
   text-align: center;
 }
 
+.resource-legend-title.single-toggle {
+  margin-bottom: 0;
+}
+
+.resource-legend-title.single-toggle span {
+  grid-column: 1 / 3;
+}
+
+.house-rep-legend {
+  width: min(180px, calc(100% - 170px));
+}
+
+.map.deep-map .house-rep-legend {
+  bottom: 214px;
+}
+
 .resource-items {
   display: grid;
   gap: 6px;
@@ -339,7 +355,7 @@ h2 {
 }
 
 .hagga-poi-layer {
-  z-index: 2;
+  z-index: 4;
   pointer-events: none;
 }
 
