@@ -399,6 +399,7 @@ h2 {
   width: 42px;
   height: 42px;
   transform: translate(-50%, -50%);
+  cursor: grab;
 }
 
 .marker {
@@ -415,7 +416,7 @@ h2 {
   filter: drop-shadow(0 8px 10px rgba(0, 0, 0, 0.6));
   font-size: 0;
   line-height: 0;
-  cursor: pointer;
+  cursor: grab;
 }
 
 .marker:hover,
@@ -654,6 +655,7 @@ button.danger {
 
 .base-item small {
   color: var(--muted);
+  font-weight: 700;
 }
 
 .base-item-details {

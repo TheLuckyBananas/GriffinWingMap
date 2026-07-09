@@ -18,7 +18,7 @@ const INITIAL_ZOOM = 2;
 const MIN_ZOOM = INITIAL_ZOOM - 1;
 const MAX_ZOOM = INITIAL_ZOOM + 2;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v28";
+const APP_VERSION = "v29";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
 const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
 
@@ -65,7 +65,7 @@ const editGuildAccessInput = document.querySelector("#editGuildAccess");
 const editCancelButton = document.querySelector("#editCancelButton");
 const mapTabs = [...document.querySelectorAll(".map-tab")];
 
-syncStatus.textContent = `Loading app ${APP_VERSION}`;
+setSyncStatus("Loading");
 
 let markers = [];
 let spiceFieldData = { bySignature: {}, default: [] };
@@ -122,6 +122,10 @@ const view = {
 
 function activeMap() {
   return MAPS[activeMapId];
+}
+
+function setSyncStatus(status) {
+  syncStatus.textContent = `${APP_VERSION} ${status}`;
 }
 
 function initialMapIdFromUrl() {
@@ -571,7 +575,6 @@ function renderMarkerSection(title, sectionMarkers) {
 
     const helperText = [
       marker.claimedByMe ? "Claimed by you." : "",
-      marker.targetType === "enemy" ? "Enemy marker can be removed by anyone." : "",
       !canEdit && marker.targetType !== "enemy" ? "Placed by another member." : "",
     ].filter(Boolean).join(" ");
 
@@ -1202,7 +1205,7 @@ function connectEvents() {
       } else {
         upsertMarker(normalizeMarker(payload.new));
       }
-      syncStatus.textContent = "Live";
+      setSyncStatus("Live");
       render();
     })
     .on("postgres_changes", { event: "*", schema: "public", table: "base_marker_claims" }, (payload) => {
@@ -1212,11 +1215,11 @@ function connectEvents() {
       if (payload.eventType === "DELETE" && payload.old.user_id === currentUserId) {
         setMarkerClaim(payload.old.marker_id, false);
       }
-      syncStatus.textContent = "Live";
+      setSyncStatus("Live");
       render();
     })
     .subscribe((status) => {
-      syncStatus.textContent = status === "SUBSCRIBED" ? "Live" : "Connecting";
+      setSyncStatus(status === "SUBSCRIBED" ? "Live" : "Connecting");
     });
 }
 
@@ -1257,7 +1260,7 @@ async function connectSupabase() {
 }
 
 boot().catch((error) => {
-  syncStatus.textContent = "Setup needed";
+  setSyncStatus("Setup needed");
   modeHint.textContent = error.message || "The map loaded, but Supabase is not reachable.";
   centerMap();
 });
