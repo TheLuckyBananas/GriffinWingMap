@@ -13,7 +13,7 @@ if (Test-Path $bundledPython) {
 
 if ($LASTEXITCODE -eq 0) {
   Write-Host ""
-  Write-Host "Done. Upload public\deep-spice-fields.json to GitHub after reviewing the printed coordinates." -ForegroundColor Green
+  Write-Host "Done. Commit deep-spice-fields.json to GitHub after reviewing the printed coordinates." -ForegroundColor Green
 } elseif ($LASTEXITCODE -eq 2) {
   Write-Host ""
   Write-Host "No Deep Desert overlays were found on Method's page. Check whether their page layout changed." -ForegroundColor Yellow

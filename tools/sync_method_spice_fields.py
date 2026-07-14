@@ -184,10 +184,10 @@ def normalize_method_html(source: str) -> str:
 def method_week_label(source: str) -> str:
     match = re.search(r"Updated for:\s*</?[^>]*>\s*([^<\n]+)", source, re.I)
     if match:
-        return " ".join(match.group(1).split())
+        return html.unescape(" ".join(match.group(1).split()))
     text = re.sub(r"<[^>]+>", " ", source)
     match = re.search(r"Updated for:\s*([^\n\r]+)", text, re.I)
-    return " ".join(match.group(1).split()) if match else ""
+    return html.unescape(" ".join(match.group(1).split())) if match else ""
 
 
 def html_attrs(tag: str) -> dict[str, str]:
@@ -202,35 +202,37 @@ def overlay_fields_from_method(source: str, kind: str, method_type: str) -> list
     fields: list[OverlayField] = []
     seen: set[tuple[str, str, str]] = set()
 
-    current_cell = ""
-    tag_pattern = re.compile(r"<[^>]+>", re.S)
-    for match in tag_pattern.finditer(normalized):
-        tag = match.group(0)
-        attrs = html_attrs(tag)
+    cell_pattern = re.compile(
+        r'<div\s+class="main-cell"\s+data-main-cell="(?P<cell>[A-I]:[1-9])"(?P<body>.*?)(?=<div\s+class="main-cell"\s+data-main-cell="|<!-- Right Y-axis label -->)',
+        re.S | re.I,
+    )
+    poi_pattern = re.compile(
+        r'data-subx="(?P<subx>[0-4])"\s+data-suby="(?P<suby>[0-4])"\s+data-poiType="(?P<poi>[^"]+)"',
+        re.S | re.I,
+    )
 
-        if attrs.get("data-main-cell"):
-            current_cell = attrs["data-main-cell"].upper()
+    for cell_match in cell_pattern.finditer(normalized):
+        cell = cell_match.group("cell").upper()
+        for poi_match in poi_pattern.finditer(cell_match.group("body")):
+            if poi_match.group("poi") != method_type:
+                continue
 
-        if attrs.get("data-poitype") != method_type:
-            continue
+            subx = poi_match.group("subx")
+            suby = poi_match.group("suby")
+            if subx not in SUBCELL_X_CENTER or suby not in SUBCELL_Y_CENTER:
+                continue
 
-        cell = attrs.get("data-main-cell", current_cell).upper()
-        subx = attrs.get("data-subx", "")
-        suby = attrs.get("data-suby", "")
-        if not re.fullmatch(r"[A-I]:[1-9]", cell) or subx not in SUBCELL_X_CENTER or suby not in SUBCELL_Y_CENTER:
-            continue
+            key = (cell, subx, suby)
+            if key in seen:
+                continue
+            seen.add(key)
 
-        key = (cell, subx, suby)
-        if key in seen:
-            continue
-        seen.add(key)
-
-        letter, column_text = cell.split(":")
-        column_index = int(column_text) - 1
-        row_index = 8 - LETTERS_BOTTOM_TO_TOP.index(letter)
-        x = (column_index + SUBCELL_X_CENTER[subx]) / 9
-        y = (row_index + SUBCELL_Y_CENTER[suby]) / 9
-        fields.append(OverlayField(kind=kind, cell=cell, subx=subx, suby=suby, x=x, y=y))
+            letter, column_text = cell.split(":")
+            column_index = int(column_text) - 1
+            row_index = 8 - LETTERS_BOTTOM_TO_TOP.index(letter)
+            x = (column_index + SUBCELL_X_CENTER[subx]) / 9
+            y = (row_index + SUBCELL_Y_CENTER[suby]) / 9
+            fields.append(OverlayField(kind=kind, cell=cell, subx=subx, suby=suby, x=x, y=y))
 
     fields.sort(key=lambda item: (item.y, item.x))
     return fields
@@ -295,7 +297,7 @@ def parse_args() -> argparse.Namespace:
     root = project_root()
     parser = argparse.ArgumentParser(description="Sync Deep Desert overlays from Method's companion map.")
     parser.add_argument("--root", type=Path, default=root, help="Project root folder.")
-    parser.add_argument("--json", type=Path, default=root / "public" / "deep-spice-fields.json", help="Overlay JSON file to update.")
+    parser.add_argument("--json", type=Path, default=root / "deep-spice-fields.json", help="Overlay JSON file to update.")
     parser.add_argument("--method-url", default=METHOD_URL, help="Method Deep Desert companion URL.")
     parser.add_argument("--tile-url", default="", help="Override the Deep Desert tile URL used for the JSON signature.")
     parser.add_argument("--dry-run", action="store_true", help="Print JSON instead of writing it.")

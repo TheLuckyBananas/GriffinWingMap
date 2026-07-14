@@ -35,16 +35,16 @@ jobs:
         run: python tools/reset_deep_desert_supabase.py
 
       - name: Sync Method Deep Desert overlays
-        run: python tools/sync_method_spice_fields.py
+        run: python tools/sync_method_spice_fields.py --json deep-spice-fields.json
 
       - name: Commit updated overlay data
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          if git diff --quiet -- public/deep-spice-fields.json; then
+          if git diff --quiet -- deep-spice-fields.json; then
             echo "No overlay data changes to commit."
           else
-            git add public/deep-spice-fields.json
+            git add deep-spice-fields.json
             git commit -m "Update Deep Desert weekly overlays"
             git push
           fi

@@ -233,6 +233,133 @@
           "label": "Loot Cave 2"
         }
       ]
+    },
+    "deepdesert_1-f9a94ec70a53f05418c333ca1ce73c46": {
+      "spice": [
+        {
+          "x": 0.097222,
+          "y": 0.097222,
+          "label": "Large Spice Field 1"
+        },
+        {
+          "x": 0.902778,
+          "y": 0.097222,
+          "label": "Large Spice Field 2"
+        },
+        {
+          "x": 0.069444,
+          "y": 0.402778,
+          "label": "Large Spice Field 3"
+        },
+        {
+          "x": 0.569444,
+          "y": 0.402778,
+          "label": "Large Spice Field 4"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.430556,
+          "label": "Large Spice Field 5"
+        }
+      ],
+      "titanium": [
+        {
+          "x": 0.513889,
+          "y": 0.097222,
+          "label": "Titanium 1"
+        },
+        {
+          "x": 0.402778,
+          "y": 0.152778,
+          "label": "Titanium 2"
+        },
+        {
+          "x": 0.513889,
+          "y": 0.263889,
+          "label": "Titanium 3"
+        }
+      ],
+      "stravidium": [
+        {
+          "x": 0.569444,
+          "y": 0.180556,
+          "label": "Stravidium 1"
+        }
+      ],
+      "testingStation": [
+        {
+          "x": 0.180556,
+          "y": 0.097222,
+          "label": "Testing Station 1"
+        },
+        {
+          "x": 0.402778,
+          "y": 0.236111,
+          "label": "Testing Station 2"
+        },
+        {
+          "x": 0.819444,
+          "y": 0.236111,
+          "label": "Testing Station 3"
+        },
+        {
+          "x": 0.097222,
+          "y": 0.569444,
+          "label": "Testing Station 4"
+        },
+        {
+          "x": 0.402778,
+          "y": 0.569444,
+          "label": "Testing Station 5"
+        },
+        {
+          "x": 0.763889,
+          "y": 0.569444,
+          "label": "Testing Station 6"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.902778,
+          "label": "Testing Station 7"
+        },
+        {
+          "x": 0.152778,
+          "y": 0.930556,
+          "label": "Testing Station 8"
+        },
+        {
+          "x": 0.430556,
+          "y": 0.930556,
+          "label": "Testing Station 9"
+        },
+        {
+          "x": 0.263889,
+          "y": 0.958333,
+          "label": "Testing Station 10"
+        },
+        {
+          "x": 0.513889,
+          "y": 0.958333,
+          "label": "Testing Station 11"
+        },
+        {
+          "x": 0.902778,
+          "y": 0.958333,
+          "label": "Testing Station 12"
+        }
+      ],
+      "cave": [
+        {
+          "x": 0.055556,
+          "y": 0.5,
+          "label": "Loot Cave 1"
+        },
+        {
+          "x": 0.5,
+          "y": 0.833333,
+          "label": "Loot Cave 2"
+        }
+      ]
     }
   },
   "default": {
@@ -241,5 +368,6 @@
     "stravidium": [],
     "testingStation": [],
     "cave": []
-  }
+  },
+  "description": "Deep Desert overlay data. Coordinates are normalized map positions from 0 to 1."
 }

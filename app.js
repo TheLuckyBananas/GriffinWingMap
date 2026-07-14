@@ -8,7 +8,7 @@
   deep: {
     id: "deep",
     title: "Deep Desert",
-    tileUrl: "https://cdn.th.gl/dune-awakening/map-tiles/deepdesert_1-0d22aa96e0f7e8eb77b2c3a6623dad7c/{z}/{y}/{x}.webp?v=1",
+    tileUrl: "https://cdn.th.gl/dune-awakening/map-tiles/deepdesert_1-f9a94ec70a53f05418c333ca1ce73c46/{z}/{y}/{x}.webp?v=1",
     emptyText: "No Deep Desert locations placed yet.",
   },
 };
@@ -21,9 +21,9 @@ const ZOOM_STEPS_PER_LEVEL = 3;
 const ZOOM_STEP = 1 / ZOOM_STEPS_PER_LEVEL;
 const TILE_OVERLAP = 1;
 const MEMBER_BASE_LIMIT = 3;
-const APP_VERSION = "v38";
+const APP_VERSION = "v39";
 const VERSION_URL = "https://cdn.th.gl/dune-awakening/version.json";
-const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=3";
+const SPICE_FIELDS_URL = "./deep-spice-fields.json?v=4";
 
 const config = window.GRIFFIN_SUPABASE || {};
 const supabaseClient = window.supabase?.createClient(config.url, config.anonKey);
