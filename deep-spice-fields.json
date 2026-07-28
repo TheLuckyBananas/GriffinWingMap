@@ -466,6 +466,128 @@
         }
       ],
       "cave": []
+    },
+    "deepdesert_1-5ac3bd23f6cb9468cfa87226881bdeaa": {
+      "spice": [
+        {
+          "x": 0.180556,
+          "y": 0.069444,
+          "label": "Large Spice Field 1"
+        },
+        {
+          "x": 0.430556,
+          "y": 0.069444,
+          "label": "Large Spice Field 2"
+        },
+        {
+          "x": 0.736111,
+          "y": 0.069444,
+          "label": "Large Spice Field 3"
+        },
+        {
+          "x": 0.930556,
+          "y": 0.152778,
+          "label": "Large Spice Field 4"
+        },
+        {
+          "x": 0.069444,
+          "y": 0.402778,
+          "label": "Large Spice Field 5"
+        },
+        {
+          "x": 0.486111,
+          "y": 0.402778,
+          "label": "Large Spice Field 6"
+        }
+      ],
+      "titanium": [
+        {
+          "x": 0.402778,
+          "y": 0.263889,
+          "label": "Titanium 1"
+        },
+        {
+          "x": 0.597222,
+          "y": 0.402778,
+          "label": "Titanium 2"
+        }
+      ],
+      "stravidium": [
+        {
+          "x": 0.597222,
+          "y": 0.263889,
+          "label": "Stravidium 1"
+        },
+        {
+          "x": 0.375,
+          "y": 0.430556,
+          "label": "Stravidium 2"
+        }
+      ],
+      "testingStation": [
+        {
+          "x": 0.097222,
+          "y": 0.097222,
+          "label": "Testing Station 1"
+        },
+        {
+          "x": 0.819444,
+          "y": 0.180556,
+          "label": "Testing Station 2"
+        },
+        {
+          "x": 0.402778,
+          "y": 0.430556,
+          "label": "Testing Station 3"
+        },
+        {
+          "x": 0.819444,
+          "y": 0.513889,
+          "label": "Testing Station 4"
+        },
+        {
+          "x": 0.847222,
+          "y": 0.902778,
+          "label": "Testing Station 5"
+        },
+        {
+          "x": 0.152778,
+          "y": 0.930556,
+          "label": "Testing Station 6"
+        },
+        {
+          "x": 0.430556,
+          "y": 0.930556,
+          "label": "Testing Station 7"
+        },
+        {
+          "x": 0.263889,
+          "y": 0.958333,
+          "label": "Testing Station 8"
+        },
+        {
+          "x": 0.513889,
+          "y": 0.958333,
+          "label": "Testing Station 9"
+        },
+        {
+          "x": 0.902778,
+          "y": 0.958333,
+          "label": "Testing Station 10"
+        }
+      ],
+      "cave": [
+        {
+          "x": 0.277778,
+          "y": 0.277778,
+          "label": "Loot Cave 1"
+        },
+        {
+          "x": 0.833333,
+          "y": 0.611111,
+          "label": "Loot Cave 2"
+        }
+      ]
     }
   },
   "default": {
