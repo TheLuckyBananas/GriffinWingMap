@@ -524,29 +524,59 @@
     "deepdesert_1-afb56638fbb1d8f6057389ab4dcbba5c": {
       "spice": [
         {
-          "x": 0.930556,
+          "x": 0.180556,
           "y": 0.069444,
           "label": "Large Spice Field 1"
         },
         {
+          "x": 0.430556,
+          "y": 0.069444,
+          "label": "Large Spice Field 2"
+        },
+        {
+          "x": 0.736111,
+          "y": 0.069444,
+          "label": "Large Spice Field 3"
+        },
+        {
+          "x": 0.930556,
+          "y": 0.069444,
+          "label": "Large Spice Field 4"
+        },
+        {
           "x": 0.236111,
           "y": 0.097222,
-          "label": "Large Spice Field 2"
+          "label": "Large Spice Field 5"
+        },
+        {
+          "x": 0.930556,
+          "y": 0.152778,
+          "label": "Large Spice Field 6"
         },
         {
           "x": 0.375,
           "y": 0.180556,
-          "label": "Large Spice Field 3"
+          "label": "Large Spice Field 7"
         },
         {
           "x": 0.041667,
           "y": 0.263889,
-          "label": "Large Spice Field 4"
+          "label": "Large Spice Field 8"
+        },
+        {
+          "x": 0.069444,
+          "y": 0.402778,
+          "label": "Large Spice Field 9"
+        },
+        {
+          "x": 0.486111,
+          "y": 0.402778,
+          "label": "Large Spice Field 10"
         },
         {
           "x": 0.819444,
           "y": 0.430556,
-          "label": "Large Spice Field 5"
+          "label": "Large Spice Field 11"
         }
       ],
       "titanium": [
@@ -556,9 +586,19 @@
           "label": "Titanium 1"
         },
         {
-          "x": 0.819444,
+          "x": 0.402778,
           "y": 0.263889,
           "label": "Titanium 2"
+        },
+        {
+          "x": 0.819444,
+          "y": 0.263889,
+          "label": "Titanium 3"
+        },
+        {
+          "x": 0.597222,
+          "y": 0.402778,
+          "label": "Titanium 4"
         }
       ],
       "stravidium": [
@@ -571,61 +611,102 @@
           "x": 0.152778,
           "y": 0.263889,
           "label": "Stravidium 2"
+        },
+        {
+          "x": 0.597222,
+          "y": 0.263889,
+          "label": "Stravidium 3"
+        },
+        {
+          "x": 0.375,
+          "y": 0.430556,
+          "label": "Stravidium 4"
         }
       ],
       "testingStation": [
         {
+          "x": 0.097222,
+          "y": 0.097222,
+          "label": "Testing Station 1"
+        },
+        {
           "x": 0.763889,
           "y": 0.180556,
-          "label": "Testing Station 1"
+          "label": "Testing Station 2"
+        },
+        {
+          "x": 0.819444,
+          "y": 0.180556,
+          "label": "Testing Station 3"
         },
         {
           "x": 0.597222,
           "y": 0.402778,
-          "label": "Testing Station 2"
+          "label": "Testing Station 4"
+        },
+        {
+          "x": 0.402778,
+          "y": 0.430556,
+          "label": "Testing Station 5"
+        },
+        {
+          "x": 0.819444,
+          "y": 0.513889,
+          "label": "Testing Station 6"
         },
         {
           "x": 0.402778,
           "y": 0.597222,
-          "label": "Testing Station 3"
+          "label": "Testing Station 7"
         },
         {
           "x": 0.180556,
           "y": 0.763889,
-          "label": "Testing Station 4"
+          "label": "Testing Station 8"
         },
         {
           "x": 0.847222,
           "y": 0.902778,
-          "label": "Testing Station 5"
+          "label": "Testing Station 9"
         },
         {
           "x": 0.152778,
           "y": 0.930556,
-          "label": "Testing Station 6"
+          "label": "Testing Station 10"
         },
         {
           "x": 0.430556,
           "y": 0.930556,
-          "label": "Testing Station 7"
+          "label": "Testing Station 11"
         },
         {
           "x": 0.263889,
           "y": 0.958333,
-          "label": "Testing Station 8"
+          "label": "Testing Station 12"
         },
         {
           "x": 0.513889,
           "y": 0.958333,
-          "label": "Testing Station 9"
+          "label": "Testing Station 13"
         },
         {
           "x": 0.902778,
           "y": 0.958333,
-          "label": "Testing Station 10"
+          "label": "Testing Station 14"
         }
       ],
-      "cave": []
+      "cave": [
+        {
+          "x": 0.277778,
+          "y": 0.277778,
+          "label": "Loot Cave 1"
+        },
+        {
+          "x": 0.833333,
+          "y": 0.611111,
+          "label": "Loot Cave 2"
+        }
+      ]
     },
     "deepdesert_1-5ac3bd23f6cb9468cfa87226881bdeaa": {
       "spice": [
